@@ -30,10 +30,14 @@ import { ThemeProvider } from 'next-themes';
 import { DeploymentProvider } from "./contexts/DeploymentContext";
 import { APIProvider } from "./contexts/APIContext";
 import { AGUIProvider } from "./contexts/agui/AGUIContext";
+import { AuthProvider } from "./contexts/AuthContext";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import Auth from "./pages/Auth";
 
 function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <AuthProvider>
       <DeploymentProvider>
         <APIProvider>
           <ChatProvider>
@@ -56,7 +60,8 @@ function App() {
                     <Route path="/deployment-readiness" element={<DeploymentReadiness />} /> {/* Supreme AI Deployment Hub */}
                     <Route path="/local-ai" element={<LocalAI />} /> {/* Pinokio-style local AI tools manager */}
                     <Route path="/music-studio" element={<MusicStudio />} /> {/* OpenUdio Matrix-inspired music generation */}
-                    <Route path="/devonn-chat" element={<DevonnChat />} /> {/* Devonn.ai Copilot with KG tracking */}
+                    <Route path="/auth" element={<Auth />} /> {/* Authentication page */}
+                    <Route path="/devonn-chat" element={<ProtectedRoute><DevonnChat /></ProtectedRoute>} /> {/* Devonn.ai Copilot with KG tracking */}
                     <Route path="/cookbook" element={<Cookbook />} /> {/* Devonn.ai Cookbook documentation */}
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
@@ -72,6 +77,7 @@ function App() {
           </ChatProvider>
         </APIProvider>
       </DeploymentProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -10,6 +10,7 @@ import Logo from './navigation/Logo';
 import DesktopNav from './navigation/DesktopNav';
 import ThemeToggle from './navigation/ThemeToggle';
 import MobileMenu from './navigation/MobileMenu';
+import { UserMenu } from './navigation/UserMenu';
 import { navigationItems } from './navigation/navigationItems';
 
 interface NavbarProps {
@@ -82,6 +83,7 @@ const Navbar = ({
             
             <div className="flex items-center space-x-4">
               <ThemeToggle />
+              <UserMenu />
               <a 
                 href="https://github.com/devonn-ai/framework" 
                 target="_blank" 

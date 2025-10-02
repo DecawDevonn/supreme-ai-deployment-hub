@@ -72,11 +72,16 @@ export class DevonnChatService {
 
   async createConversation(title?: string): Promise<string> {
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('conversations')
         .insert([
           {
             title: title || `Conversation ${new Date().toLocaleString()}`,
+            user_id: user.id,
             metadata: {},
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()

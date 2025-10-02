@@ -3,7 +3,8 @@ import React, { useEffect } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import Footer from '@/components/Footer';
 import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Import all the component sections
 import HeroSection from '@/components/index/HeroSection';
@@ -27,6 +28,8 @@ import PricingSection from '@/components/index/PricingSection';
 
 const Index = () => {
   const { scrollYProgress } = useScroll();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
