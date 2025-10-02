@@ -4,6 +4,7 @@ export const navigationItems = [
   { name: 'Documentation', path: '/documentation' },
   { name: 'Deployment', path: '/deployment' },
   { name: 'Readiness Hub', path: '/deployment-readiness' },
+  { name: 'Local AI', path: '/local-ai' },
   { name: 'Workflows', path: '/workflows' },
   { name: 'API', path: '/api' },
   { name: 'Advanced AI', path: '/advanced-ai' },
