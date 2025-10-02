@@ -10,9 +10,11 @@ import InteractiveTerminal from './InteractiveTerminal';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const HeroSection: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 300], [0, 100]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
@@ -54,6 +56,14 @@ const HeroSection: React.FC = () => {
 
   const handleDocumentationClick = () => {
     navigate('/documentation');
+  };
+
+  const handleGetStarted = () => {
+    if (user) {
+      navigate('/devonn-chat');
+    } else {
+      navigate('/auth');
+    }
   };
 
   return (
@@ -106,7 +116,7 @@ const HeroSection: React.FC = () => {
                   size="lg"
                   className="bg-[#00FF41] hover:bg-[#00FF41]/90 text-black shadow-[0_0_20px_rgba(0,255,65,0.6)] 
                            transition-all duration-300 group relative overflow-hidden w-full sm:w-auto text-lg py-6"
-                  onClick={handleDownloadClick}
+                  onClick={handleGetStarted}
                 >
                   <motion.div
                     className="absolute inset-0 bg-white/20"
@@ -114,8 +124,7 @@ const HeroSection: React.FC = () => {
                     animate={{ x: ["0%", "100%"] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   />
-                  <Download className="mr-2 h-5 w-5 opacity-70" />
-                  <span className="relative z-10">Download Framework</span>
+                  <span className="relative z-10">{user ? 'Open Chat' : 'Get Started'}</span>
                   <ArrowRight className="ml-2 h-5 w-5 opacity-70 group-hover:translate-x-1 transition-transform" />
                 </Button>
                 
