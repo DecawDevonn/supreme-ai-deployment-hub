@@ -219,3 +219,15 @@ export const deletePersona = async (personaId: string): Promise<void> => {
     throw error;
   }
 };
+
+/**
+ * Persona service object with all operations
+ */
+export const personaService = {
+  listPersonas: fetchPersonas,
+  getPersona: fetchPersona,
+  getPersonaPrompt: fetchPersonaPrompt,
+  createPersona,
+  updatePersona,
+  deletePersona,
+};

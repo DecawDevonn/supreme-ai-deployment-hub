@@ -41,14 +41,16 @@ export class DevonnChatService {
 
   async sendMessage(
     conversationId: string,
-    messages: Array<{ role: string; content: string }>
+    messages: Array<{ role: string; content: string }>,
+    personaId?: string
   ): Promise<ChatResponse> {
     try {
       const { data, error } = await supabase.functions.invoke('devonn-chat', {
         body: {
           conversationId,
           messages,
-          action: 'chat'
+          action: 'chat',
+          personaId
         }
       });
 

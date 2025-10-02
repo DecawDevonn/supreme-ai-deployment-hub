@@ -9,6 +9,7 @@ export const useDevonnChat = () => {
   const [entities, setEntities] = useState<KGEntity[]>([]);
   const [relationships, setRelationships] = useState<KGRelationship[]>([]);
   const [conversations, setConversations] = useState<Array<{ id: string; title: string; createdAt: Date }>>([]);
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null);
 
   const loadConversations = useCallback(async () => {
     try {
@@ -92,7 +93,7 @@ export const useDevonnChat = () => {
         content: m.content
       }));
 
-      const response = await chatService.sendMessage(conversationId, allMessages);
+      const response = await chatService.sendMessage(conversationId, allMessages, selectedPersonaId || undefined);
 
       const assistantMessage: ChatMessage = {
         conversationId,
@@ -125,7 +126,7 @@ export const useDevonnChat = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [conversationId, messages, startNewConversation]);
+  }, [conversationId, messages, selectedPersonaId, startNewConversation]);
 
   return {
     conversationId,
@@ -134,6 +135,8 @@ export const useDevonnChat = () => {
     entities,
     relationships,
     conversations,
+    selectedPersonaId,
+    setSelectedPersonaId,
     startNewConversation,
     loadConversation,
     sendMessage,

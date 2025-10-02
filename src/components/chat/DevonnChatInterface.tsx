@@ -4,13 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Send, Plus, MessageSquare } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, Send, Plus, MessageSquare, User } from 'lucide-react';
 import { useDevonnChat } from '@/hooks/useDevonnChat';
 import { KnowledgeGraphView } from './KnowledgeGraphView';
 import { cn } from '@/lib/utils';
+import { personaService } from '@/services/persona/personaService';
 
 export const DevonnChatInterface = () => {
   const [input, setInput] = useState('');
+  const [personas, setPersonas] = useState<Array<{ personaId: string; name: string; role: string }>>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -20,10 +23,29 @@ export const DevonnChatInterface = () => {
     entities,
     relationships,
     conversations,
+    selectedPersonaId,
+    setSelectedPersonaId,
     startNewConversation,
     loadConversation,
     sendMessage,
   } = useDevonnChat();
+
+  // Load personas on mount
+  useEffect(() => {
+    const loadPersonas = async () => {
+      try {
+        const allPersonas = await personaService.listPersonas();
+        setPersonas(allPersonas.map(p => ({
+          personaId: p.persona_id,
+          name: p.name,
+          role: p.role
+        })));
+      } catch (error) {
+        console.error('Failed to load personas:', error);
+      }
+    };
+    loadPersonas();
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -104,10 +126,30 @@ export const DevonnChatInterface = () => {
       <div className="lg:col-span-2 space-y-4">
         <Card className="h-full flex flex-col">
           <CardHeader>
-            <CardTitle>Devonn.ai Copilot</CardTitle>
-            <CardDescription>
-              AI assistant with Knowledge Graph tracking and workflow automation
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Devonn.ai Copilot</CardTitle>
+                <CardDescription>
+                  AI assistant with Knowledge Graph tracking and workflow automation
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-muted-foreground" />
+                <Select value={selectedPersonaId || 'default'} onValueChange={(value) => setSelectedPersonaId(value === 'default' ? null : value)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select persona" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Default Copilot</SelectItem>
+                    {personas.map((persona) => (
+                      <SelectItem key={persona.personaId} value={persona.personaId}>
+                        {persona.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col min-h-0">
             <ScrollArea className="flex-1 pr-4" ref={scrollRef}>

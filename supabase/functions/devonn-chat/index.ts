@@ -29,7 +29,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, conversationId, action } = await req.json();
+    const { messages, conversationId, action, personaId } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -40,8 +40,8 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // System prompt with Knowledge Graph awareness
-    const systemPrompt = `You are Devonn.ai Copilot - an intelligent assistant with Knowledge Graph awareness.
+    // Get persona system prompt if personaId provided
+    let systemPrompt = `You are Devonn.ai Copilot - an intelligent assistant with Knowledge Graph awareness.
 
 Core Capabilities:
 1. **Knowledge Graph Updates**: Extract entities and relationships from conversations
@@ -63,6 +63,20 @@ Return responses in JSON format:
   "workflows": [{"name": "workflow_name", "trigger": "event", "actions": []}],
   "metadata": {"confidence": 0.9, "topics": ["deployment", "k8s"]}
 }`;
+
+    // If personaId provided, fetch and use persona's system prompt
+    if (personaId) {
+      const { data: personaPrompt, error: promptError } = await supabase
+        .from('persona_prompts')
+        .select('system_prompt')
+        .eq('persona_id', personaId)
+        .single();
+
+      if (!promptError && personaPrompt) {
+        systemPrompt = personaPrompt.system_prompt;
+        console.log(`Using persona ${personaId} system prompt`);
+      }
+    }
 
     // Call Lovable AI
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
