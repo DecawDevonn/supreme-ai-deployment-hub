@@ -19,6 +19,7 @@ import FlowEditor from "./pages/FlowEditor";
 import AgentDemo from "./pages/AgentDemo"; // Import the new AgentDemo page
 import EnhancedAgentDemo from "./pages/EnhancedAgentDemo"; // Enhanced multi-provider platform
 import AdvancedAI from "./pages/AdvancedAI";
+import DeploymentReadiness from "./pages/DeploymentReadiness";
 import { Toaster } from "./components/ui/sonner";
 import { ChatProvider } from "./contexts/ChatContext";
 import { ThemeProvider } from 'next-themes';
@@ -48,6 +49,7 @@ function App() {
                     <Route path="/agent-demo" element={<AgentDemo />} /> {/* Add the new route */}
                     <Route path="/enhanced-agents" element={<EnhancedAgentDemo />} /> {/* Enhanced multi-LLM platform */}
                     <Route path="/advanced-ai" element={<AdvancedAI />} /> {/* Advanced AI Agent with cutting-edge features */}
+                    <Route path="/deployment-readiness" element={<DeploymentReadiness />} /> {/* Supreme AI Deployment Hub */}
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/terms" element={<Terms />} />
