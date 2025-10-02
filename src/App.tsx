@@ -21,6 +21,7 @@ import EnhancedAgentDemo from "./pages/EnhancedAgentDemo"; // Enhanced multi-pro
 import AdvancedAI from "./pages/AdvancedAI";
 import DeploymentReadiness from "./pages/DeploymentReadiness";
 import LocalAI from "./pages/LocalAI";
+import MusicStudio from "./pages/MusicStudio";
 import { Toaster } from "./components/ui/sonner";
 import { ChatProvider } from "./contexts/ChatContext";
 import { ThemeProvider } from 'next-themes';
@@ -52,6 +53,7 @@ function App() {
                     <Route path="/advanced-ai" element={<AdvancedAI />} /> {/* Advanced AI Agent with cutting-edge features */}
                     <Route path="/deployment-readiness" element={<DeploymentReadiness />} /> {/* Supreme AI Deployment Hub */}
                     <Route path="/local-ai" element={<LocalAI />} /> {/* Pinokio-style local AI tools manager */}
+                    <Route path="/music-studio" element={<MusicStudio />} /> {/* OpenUdio Matrix-inspired music generation */}
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/terms" element={<Terms />} />
