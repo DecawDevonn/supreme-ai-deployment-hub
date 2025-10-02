@@ -122,6 +122,86 @@ export type Database = {
         }
         Relationships: []
       }
+      persona_prompts: {
+        Row: {
+          created_at: string
+          id: string
+          persona_id: string
+          system_prompt: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          persona_id: string
+          system_prompt: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          persona_id?: string
+          system_prompt?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persona_prompts_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: true
+            referencedRelation: "personas"
+            referencedColumns: ["persona_id"]
+          },
+        ]
+      }
+      personas: {
+        Row: {
+          archetype: string | null
+          boundaries: Json | null
+          created_at: string
+          id: string
+          identity: Json | null
+          memory_hooks: Json | null
+          name: string
+          persona_id: string
+          raw_schema: Json
+          role: string
+          skills: Json | null
+          traits: Json | null
+          updated_at: string
+        }
+        Insert: {
+          archetype?: string | null
+          boundaries?: Json | null
+          created_at?: string
+          id?: string
+          identity?: Json | null
+          memory_hooks?: Json | null
+          name: string
+          persona_id: string
+          raw_schema: Json
+          role: string
+          skills?: Json | null
+          traits?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          archetype?: string | null
+          boundaries?: Json | null
+          created_at?: string
+          id?: string
+          identity?: Json | null
+          memory_hooks?: Json | null
+          name?: string
+          persona_id?: string
+          raw_schema?: Json
+          role?: string
+          skills?: Json | null
+          traits?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.devonn-chat]
 verify_jwt = false
+
+[functions.persona-management]
+verify_jwt = false
