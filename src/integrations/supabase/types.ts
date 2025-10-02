@@ -14,7 +14,114 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role?: string
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      knowledge_graph_entities: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          entity_name: string
+          entity_type: string
+          id: string
+          properties: Json | null
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          entity_name: string
+          entity_type: string
+          id?: string
+          properties?: Json | null
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          entity_name?: string
+          entity_type?: string
+          id?: string
+          properties?: Json | null
+        }
+        Relationships: []
+      }
+      knowledge_graph_relationships: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          from_entity: string
+          id: string
+          properties: Json | null
+          relationship_type: string
+          to_entity: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          from_entity: string
+          id?: string
+          properties?: Json | null
+          relationship_type: string
+          to_entity: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          from_entity?: string
+          id?: string
+          properties?: Json | null
+          relationship_type?: string
+          to_entity?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
