@@ -5,5 +5,6 @@ export const navigationItems = [
   { name: 'Deployment', path: '/deployment' },
   { name: 'Workflows', path: '/workflows' },
   { name: 'API', path: '/api' },
+  { name: 'Advanced AI', path: '/advanced-ai' },
   { name: 'About', path: '/about' },
 ];
