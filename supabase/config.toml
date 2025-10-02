@@ -2,3 +2,6 @@ project_id = "bqkpxdjmpbucenbppxzc"
 
 [functions.generate-music]
 verify_jwt = false
+
+[functions.devonn-chat]
+verify_jwt = false

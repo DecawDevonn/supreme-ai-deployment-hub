@@ -22,6 +22,8 @@ import AdvancedAI from "./pages/AdvancedAI";
 import DeploymentReadiness from "./pages/DeploymentReadiness";
 import LocalAI from "./pages/LocalAI";
 import MusicStudio from "./pages/MusicStudio";
+import DevonnChat from "./pages/DevonnChat";
+import Cookbook from "./pages/Cookbook";
 import { Toaster } from "./components/ui/sonner";
 import { ChatProvider } from "./contexts/ChatContext";
 import { ThemeProvider } from 'next-themes';
@@ -54,6 +56,8 @@ function App() {
                     <Route path="/deployment-readiness" element={<DeploymentReadiness />} /> {/* Supreme AI Deployment Hub */}
                     <Route path="/local-ai" element={<LocalAI />} /> {/* Pinokio-style local AI tools manager */}
                     <Route path="/music-studio" element={<MusicStudio />} /> {/* OpenUdio Matrix-inspired music generation */}
+                    <Route path="/devonn-chat" element={<DevonnChat />} /> {/* Devonn.ai Copilot with KG tracking */}
+                    <Route path="/cookbook" element={<Cookbook />} /> {/* Devonn.ai Cookbook documentation */}
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/terms" element={<Terms />} />
