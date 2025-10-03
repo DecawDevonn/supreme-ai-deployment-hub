@@ -96,7 +96,7 @@ const ChatInterface = () => {
     }
   }, [contextMessages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
     
@@ -108,7 +108,47 @@ const ChatInterface = () => {
     };
     
     setMessages(prev => [...prev, newMessage]);
-    sendMessage(message);
+    
+    try {
+      // Call backend for AI response
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ 
+          text: message,
+          action: isListening ? 'voice' : 'chat'
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to get response');
+      }
+
+      const data = await response.json();
+      
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: data.response,
+        sender: 'assistant',
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, aiMessage]);
+      
+      // If voice mode is active, speak the response
+      if (speechSupport.voiceOutput && isListening) {
+        const utterance = new SpeechSynthesisUtterance(data.response);
+        window.speechSynthesis.speak(utterance);
+      }
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to get response');
+    }
+    
     setMessage('');
   };
 

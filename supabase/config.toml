@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.persona-management]
 verify_jwt = true
+
+[functions.voice-chat]
+verify_jwt = false
