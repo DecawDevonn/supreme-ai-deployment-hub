@@ -13,9 +13,10 @@ serve(async (req) => {
   }
 
   try {
+    // Use service role key to bypass RLS for admin operations
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     const { method } = req;

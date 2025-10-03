@@ -7,4 +7,4 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.persona-management]
-verify_jwt = false
+verify_jwt = true
