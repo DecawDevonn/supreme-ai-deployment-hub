@@ -163,7 +163,8 @@ export function useDeploymentReadiness() {
       const data = await DeploymentReadinessService.getDeploymentMetrics();
       setMetrics(data);
     } catch (error) {
-      console.error('Error loading metrics:', error);
+      // Silently fail if backend is not available
+      console.warn('Deployment metrics backend not available');
     }
   }, []);
 

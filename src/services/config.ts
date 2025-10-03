@@ -15,9 +15,9 @@ export const apiClient = axios.create({
 // Error handling helper
 export const handleServiceError = (error: unknown, message: string): never => {
   if (axios.isAxiosError(error)) {
-    console.error(`${message}:`, error.response?.data || error.message);
+    console.warn(`${message}:`, error.response?.data || error.message);
   } else {
-    console.error(`${message}:`, error);
+    console.warn(`${message}:`, error);
   }
   throw error;
 };
