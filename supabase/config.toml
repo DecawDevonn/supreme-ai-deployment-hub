@@ -11,3 +11,12 @@ verify_jwt = true
 
 [functions.voice-chat]
 verify_jwt = false
+
+[functions.dag-builder]
+verify_jwt = true
+
+[functions.workflow-run]
+verify_jwt = true
+
+[functions.workflow-status]
+verify_jwt = true
