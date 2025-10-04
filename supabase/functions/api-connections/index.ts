@@ -115,17 +115,40 @@ serve(async (req) => {
       const isValid = await validateCredentials(service_name, auth_type, credentials);
       console.log(`Validation result: ${isValid}`);
 
+      // Encrypt credentials before storing
+      const encryptionKey = Deno.env.get('API_CREDENTIALS_ENCRYPTION_KEY');
+      if (!encryptionKey) {
+        console.error('Encryption key not configured');
+        return new Response(
+          JSON.stringify({ error: 'Server configuration error' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const { data: encryptedData, error: encryptError } = await supabase.rpc('encrypt_credentials', {
+        credentials_json: credentials,
+        encryption_key: encryptionKey
+      });
+
+      if (encryptError) {
+        console.error('Encryption error:', encryptError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to encrypt credentials' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       const { data, error } = await supabase
         .from('api_connections')
         .insert({
           user_id: user.id,
           service_name,
           auth_type,
-          credentials,
+          credentials: encryptedData,
           is_valid: isValid,
           last_validated_at: isValid ? new Date().toISOString() : null,
         })
-        .select()
+        .select('id, service_name, auth_type, is_valid, last_validated_at, created_at, updated_at')
         .single();
 
       if (error) {
@@ -191,10 +214,33 @@ serve(async (req) => {
         );
       }
 
+      // Decrypt credentials before validating
+      const encryptionKey = Deno.env.get('API_CREDENTIALS_ENCRYPTION_KEY');
+      if (!encryptionKey) {
+        console.error('Encryption key not configured');
+        return new Response(
+          JSON.stringify({ error: 'Server configuration error' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const { data: decryptedCredentials, error: decryptError } = await supabase.rpc('decrypt_credentials', {
+        encrypted_data: connection.credentials,
+        encryption_key: encryptionKey
+      });
+
+      if (decryptError) {
+        console.error('Decryption error:', decryptError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to decrypt credentials' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       const isValid = await validateCredentials(
         connection.service_name,
         connection.auth_type,
-        connection.credentials
+        decryptedCredentials
       );
 
       const { error: updateError } = await supabase
