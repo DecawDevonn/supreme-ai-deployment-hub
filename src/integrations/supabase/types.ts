@@ -18,7 +18,7 @@ export type Database = {
         Row: {
           auth_type: Database["public"]["Enums"]["auth_type"]
           created_at: string
-          credentials: Json
+          credentials: string
           id: string
           is_valid: boolean
           last_validated_at: string | null
@@ -29,7 +29,7 @@ export type Database = {
         Insert: {
           auth_type: Database["public"]["Enums"]["auth_type"]
           created_at?: string
-          credentials: Json
+          credentials: string
           id?: string
           is_valid?: boolean
           last_validated_at?: string | null
@@ -40,7 +40,7 @@ export type Database = {
         Update: {
           auth_type?: Database["public"]["Enums"]["auth_type"]
           created_at?: string
-          credentials?: Json
+          credentials?: string
           id?: string
           is_valid?: boolean
           last_validated_at?: string | null
@@ -371,6 +371,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrypt_credentials: {
+        Args: { encrypted_data: string; encryption_key: string }
+        Returns: Json
+      }
+      encrypt_credentials: {
+        Args: { credentials_json: Json; encryption_key: string }
+        Returns: string
+      }
       is_admin: {
         Args: { _user_id: string }
         Returns: boolean
