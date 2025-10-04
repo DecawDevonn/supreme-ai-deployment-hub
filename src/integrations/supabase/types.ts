@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_connections: {
+        Row: {
+          auth_type: Database["public"]["Enums"]["auth_type"]
+          created_at: string
+          credentials: Json
+          id: string
+          is_valid: boolean
+          last_validated_at: string | null
+          service_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth_type: Database["public"]["Enums"]["auth_type"]
+          created_at?: string
+          credentials: Json
+          id?: string
+          is_valid?: boolean
+          last_validated_at?: string | null
+          service_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth_type?: Database["public"]["Enums"]["auth_type"]
+          created_at?: string
+          credentials?: Json
+          id?: string
+          is_valid?: boolean
+          last_validated_at?: string | null
+          service_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -342,6 +378,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      auth_type: "api_key" | "oauth2" | "basic_auth" | "bearer_token"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -470,6 +507,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      auth_type: ["api_key", "oauth2", "basic_auth", "bearer_token"],
     },
   },
 } as const
