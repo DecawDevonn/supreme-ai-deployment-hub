@@ -20,3 +20,6 @@ verify_jwt = true
 
 [functions.workflow-status]
 verify_jwt = true
+
+[functions.toggle-feature]
+verify_jwt = true
