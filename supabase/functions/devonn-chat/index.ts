@@ -1,27 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-interface Message {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
-interface KGEntity {
-  type: string;
-  name: string;
-  properties?: Record<string, any>;
-}
-
-interface KGRelationship {
-  from: string;
-  to: string;
-  type: string;
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -29,180 +12,204 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, conversationId, action, personaId } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const { conversationId, messages, action = 'chat', personaId } = await req.json();
+    
+    if (!conversationId || !messages || !Array.isArray(messages)) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'conversationId and messages array are required' 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get persona system prompt if personaId provided
-    let systemPrompt = `You are Devonn.ai Copilot - an intelligent assistant with Knowledge Graph awareness.
-
-Core Capabilities:
-1. **Knowledge Graph Updates**: Extract entities and relationships from conversations
-2. **Workflow Automation**: Help with CI/CD, GitHub issues, deployments
-3. **Cloud Integration**: AWS EKS, RunPod GPU, Kubernetes orchestration
-4. **Developer Tools**: Code review, testing, infrastructure management
-
-When responding:
-- Identify entities (Services, Deployments, Issues, People, Tools)
-- Suggest relationships between entities
-- Provide actionable workflow recommendations
-- Track conversation context and state
-
-Return responses in JSON format:
-{
-  "message": "Your response text",
-  "entities": [{"type": "Service", "name": "example", "properties": {}}],
-  "relationships": [{"from": "A", "to": "B", "type": "DEPLOYED_ON"}],
-  "workflows": [{"name": "workflow_name", "trigger": "event", "actions": []}],
-  "metadata": {"confidence": 0.9, "topics": ["deployment", "k8s"]}
-}`;
-
-    // If personaId provided, fetch and use persona's system prompt
+    let systemPrompt = 'You are Devonn, a helpful AI assistant with knowledge graph capabilities. Analyze conversations and identify key entities (people, places, concepts) and their relationships.';
+    
     if (personaId) {
-      const { data: personaPrompt, error: promptError } = await supabase
-        .from('persona_prompts')
-        .select('system_prompt')
+      const { data: persona } = await supabase
+        .from('personas')
+        .select('*, persona_prompts(*)')
         .eq('persona_id', personaId)
         .single();
-
-      if (!promptError && personaPrompt) {
-        systemPrompt = personaPrompt.system_prompt;
-        console.log(`Using persona ${personaId} system prompt`);
+      
+      if (persona && persona.persona_prompts && persona.persona_prompts.length > 0) {
+        systemPrompt = persona.persona_prompts[0].system_prompt;
       }
     }
 
-    // Call Lovable AI
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
+    const chatResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: 'google/gemini-2.5-flash',
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: 'system', content: systemPrompt },
           ...messages
         ],
-        stream: false,
+        temperature: 0.7,
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+    if (!chatResponse.ok) {
+      const errorText = await chatResponse.text();
+      console.error('AI Gateway error:', chatResponse.status, errorText);
       
-      if (response.status === 429) {
+      if (chatResponse.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ success: false, error: 'Rate limit exceeded. Please try again later.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      if (response.status === 402) {
+      if (chatResponse.status === 402) {
         return new Response(
-          JSON.stringify({ error: "Payment required. Please add credits to your workspace." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ success: false, error: 'Payment required. Please add credits to your workspace.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-
-      throw new Error(`AI gateway error: ${response.status}`);
+      
+      throw new Error(`AI Gateway error: ${chatResponse.status}`);
     }
 
-    const data = await response.json();
-    let aiResponse = data.choices?.[0]?.message?.content;
+    const chatData = await chatResponse.json();
+    const aiResponse = chatData.choices?.[0]?.message?.content || 'No response generated';
 
-    // Try to parse structured response
-    let parsedResponse: any = {
-      message: aiResponse,
-      entities: [],
-      relationships: [],
-      workflows: [],
-      metadata: {}
-    };
+    const kgExtractionPrompt = `Analyze this conversation and extract:
+1. Key entities (people, places, concepts, things) with their types
+2. Relationships between entities
 
-    try {
-      // Check if response is JSON
-      if (aiResponse.includes('{') && aiResponse.includes('}')) {
-        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+Conversation:
+${messages.map((m: any) => `${m.role}: ${m.content}`).join('\n')}
+
+Assistant response: ${aiResponse}
+
+Return a JSON object with this structure:
+{
+  "entities": [{"type": "person|place|concept|thing", "name": "entity name", "properties": {}}],
+  "relationships": [{"from": "entity1", "to": "entity2", "type": "relationship type"}]
+}`;
+
+    const kgResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: 'You are an expert at extracting structured knowledge from conversations. Always return valid JSON.' },
+          { role: 'user', content: kgExtractionPrompt }
+        ],
+        temperature: 0.3,
+      }),
+    });
+
+    let entities: any[] = [];
+    let relationships: any[] = [];
+
+    if (kgResponse.ok) {
+      const kgData = await kgResponse.json();
+      const kgContent = kgData.choices?.[0]?.message?.content || '{}';
+      
+      try {
+        const jsonMatch = kgContent.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-          parsedResponse = JSON.parse(jsonMatch[0]);
+          const extracted = JSON.parse(jsonMatch[0]);
+          entities = extracted.entities || [];
+          relationships = extracted.relationships || [];
         }
+      } catch (e) {
+        console.error('Error parsing KG extraction:', e);
       }
-    } catch (e) {
-      console.log("Response is plain text, not JSON");
     }
 
-    // Store conversation if conversationId provided
-    if (conversationId) {
-      await supabase.from('chat_messages').insert([
-        {
-          conversation_id: conversationId,
-          role: 'user',
-          content: messages[messages.length - 1].content,
-          created_at: new Date().toISOString()
-        },
-        {
-          conversation_id: conversationId,
-          role: 'assistant',
-          content: parsedResponse.message,
-          metadata: parsedResponse,
-          created_at: new Date().toISOString()
-        }
-      ]);
-
-      // Update Knowledge Graph if entities found
-      if (parsedResponse.entities && parsedResponse.entities.length > 0) {
-        await supabase.from('knowledge_graph_entities').insert(
-          parsedResponse.entities.map((entity: KGEntity) => ({
-            conversation_id: conversationId,
-            entity_type: entity.type,
-            entity_name: entity.name,
-            properties: entity.properties || {},
-            created_at: new Date().toISOString()
-          }))
-        );
-      }
-
-      // Store relationships
-      if (parsedResponse.relationships && parsedResponse.relationships.length > 0) {
-        await supabase.from('knowledge_graph_relationships').insert(
-          parsedResponse.relationships.map((rel: KGRelationship) => ({
-            conversation_id: conversationId,
-            from_entity: rel.from,
-            to_entity: rel.to,
-            relationship_type: rel.type,
-            created_at: new Date().toISOString()
-          }))
-        );
-      }
+    const lastUserMessage = messages[messages.length - 1];
+    if (lastUserMessage && lastUserMessage.role === 'user') {
+      await supabase.from('chat_messages').insert({
+        conversation_id: conversationId,
+        role: 'user',
+        content: lastUserMessage.content,
+        metadata: {}
+      });
     }
+
+    await supabase.from('chat_messages').insert({
+      conversation_id: conversationId,
+      role: 'assistant',
+      content: aiResponse,
+      metadata: { entities, relationships }
+    });
+
+    if (entities.length > 0) {
+      const entityInserts = entities.map((e: any) => ({
+        conversation_id: conversationId,
+        entity_type: e.type || 'concept',
+        entity_name: e.name,
+        properties: e.properties || {}
+      }));
+      await supabase.from('knowledge_graph_entities').insert(entityInserts);
+    }
+
+    if (relationships.length > 0) {
+      const relInserts = relationships.map((r: any) => ({
+        conversation_id: conversationId,
+        from_entity: r.from,
+        to_entity: r.to,
+        relationship_type: r.type,
+        properties: {}
+      }));
+      await supabase.from('knowledge_graph_relationships').insert(relInserts);
+    }
+
+    await supabase
+      .from('conversations')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', conversationId);
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        response: parsedResponse.message,
-        entities: parsedResponse.entities || [],
-        relationships: parsedResponse.relationships || [],
-        workflows: parsedResponse.workflows || [],
-        metadata: parsedResponse.metadata || {},
-        timestamp: new Date().toISOString()
+        response: aiResponse,
+        entities,
+        relationships,
+        workflows: [],
+        metadata: {
+          model: 'google/gemini-2.5-flash',
+          conversationId,
+          personaId
+        }
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
 
-  } catch (error: any) {
-    console.error("Error in devonn-chat function:", error);
+  } catch (error) {
+    console.error('Error in devonn-chat function:', error);
     return new Response(
-      JSON.stringify({ error: error.message || "Failed to process chat request" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ 
+        success: false,
+        error: error instanceof Error ? error.message : 'Internal server error' 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
 });
