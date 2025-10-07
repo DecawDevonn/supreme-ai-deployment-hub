@@ -223,8 +223,21 @@ user = db.query(User).filter(User.email == email).first()
 
 ## Data Protection
 
-### ✅ Encryption at Rest
+### ✅ End-to-End Encryption (E2E)
 
+**Frontend (Web Crypto API - AES-GCM-256):**
+```typescript
+import { encrypt, decrypt } from '@/utils/encryption';
+
+// Encrypt sensitive data before storage
+const encrypted = await encrypt(apiKey);
+localStorage.setItem('secure_key', encrypted);
+
+// Decrypt when needed
+const decrypted = await decrypt(encrypted);
+```
+
+**Backend (Fernet):**
 ```python
 from cryptography.fernet import Fernet
 
@@ -240,11 +253,17 @@ decrypted_data = cipher.decrypt(encrypted_data).decode()
 ```
 
 **Encryption Strategy:**
-- [ ] Encrypt API credentials in database
-- [ ] Encrypt user payment information
+- [ ] **Client-side encryption** for API keys, chat messages, user preferences
+- [ ] **Database encryption** for credentials using pgcrypto
+- [ ] **E2E encryption** for sensitive communications
 - [ ] Use TLS 1.3 for data in transit
 - [ ] Encrypt backup files
 - [ ] Implement key management system (KMS)
+- [ ] Rotate encryption keys every 30 days
+- [ ] Use random IVs for each encryption operation
+- [ ] Never log decrypted data
+
+**See `docs/E2E_ENCRYPTION.md` for complete implementation guide.**
 
 ### ✅ PII Protection
 

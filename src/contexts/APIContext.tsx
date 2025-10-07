@@ -25,40 +25,50 @@ export const APIProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   // Load saved configs from localStorage on initial load
   useEffect(() => {
-    const savedConfigs = localStorage.getItem(STORAGE_KEY);
-    if (savedConfigs) {
-      try {
-        const parsedConfigs = JSON.parse(savedConfigs) as APIConfig[];
-        
-        // Decrypt any stored API keys
-        const decryptedConfigs = parsedConfigs.map(config => ({
-          ...config,
-          apiKey: config.apiKey ? decrypt(config.apiKey) : undefined
-        }));
-        
-        setAPIConfigs(decryptedConfigs);
-      } catch (error) {
-        console.error('Error loading API configurations:', error);
-        toast.error('Failed to load saved API configurations');
+    const loadConfigs = async () => {
+      const savedConfigs = localStorage.getItem(STORAGE_KEY);
+      if (savedConfigs) {
+        try {
+          const parsedConfigs = JSON.parse(savedConfigs) as APIConfig[];
+          
+          // Decrypt any stored API keys (handle async)
+          const decryptedConfigs = await Promise.all(
+            parsedConfigs.map(async (config) => ({
+              ...config,
+              apiKey: config.apiKey ? await decrypt(config.apiKey) : undefined
+            }))
+          );
+          
+          setAPIConfigs(decryptedConfigs);
+        } catch (error) {
+          console.error('Error loading API configurations:', error);
+          toast.error('Failed to load saved API configurations');
+        }
       }
-    }
+    };
+    loadConfigs();
   }, []);
   
   // Save configs to localStorage whenever they change
   useEffect(() => {
-    if (apiConfigs.length > 0) {
-      try {
-        // Encrypt API keys before storing
-        const encryptedConfigs = apiConfigs.map(config => ({
-          ...config,
-          apiKey: config.apiKey ? encrypt(config.apiKey) : undefined
-        }));
-        
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(encryptedConfigs));
-      } catch (error) {
-        console.error('Error saving API configurations:', error);
+    const saveConfigs = async () => {
+      if (apiConfigs.length > 0) {
+        try {
+          // Encrypt API keys before storing (handle async)
+          const encryptedConfigs = await Promise.all(
+            apiConfigs.map(async (config) => ({
+              ...config,
+              apiKey: config.apiKey ? await encrypt(config.apiKey) : undefined
+            }))
+          );
+          
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(encryptedConfigs));
+        } catch (error) {
+          console.error('Error saving API configurations:', error);
+        }
       }
-    }
+    };
+    saveConfigs();
   }, [apiConfigs]);
   
   const addAPIConfig = (config: NewAPIConfig) => {
@@ -150,6 +160,7 @@ export const APIProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Get decrypted API key by name
   const getSecureAPIKey = (name: string): string | undefined => {
     const config = apiConfigs.find(c => c.name === name);
+    // API key is already decrypted in memory
     return config?.apiKey;
   };
   
