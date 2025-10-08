@@ -4,6 +4,7 @@ export const navigationItems = [
   { name: 'Documentation', path: '/documentation' },
   { name: 'Cookbook', path: '/cookbook' },
   { name: 'Deployment', path: '/deployment' },
+  { name: 'Sandbox', path: '/sandbox' },
   { name: 'Readiness Hub', path: '/deployment-readiness' },
   { name: 'Devonn Chat', path: '/devonn-chat' },
   { name: 'Local AI', path: '/local-ai' },

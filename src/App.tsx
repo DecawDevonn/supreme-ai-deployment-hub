@@ -25,6 +25,7 @@ import LocalAI from "./pages/LocalAI";
 import MusicStudio from "./pages/MusicStudio";
 import DevonnChat from "./pages/DevonnChat";
 import Cookbook from "./pages/Cookbook";
+import Sandbox from "./pages/Sandbox";
 import { Toaster } from "./components/ui/sonner";
 import { ChatProvider } from "./contexts/ChatContext";
 import { ThemeProvider } from 'next-themes';
@@ -66,6 +67,7 @@ function App() {
                     <Route path="/cookbook" element={<Cookbook />} /> {/* Devonn.ai Cookbook documentation */}
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
+                    <Route path="/sandbox" element={<Sandbox />} />
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/privacy" element={<Privacy />} />
                     <Route path="*" element={<NotFound />} />
