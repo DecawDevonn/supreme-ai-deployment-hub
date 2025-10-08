@@ -1,0 +1,190 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: devonn-postgres
+    environment:
+      POSTGRES_DB: devonn_ai
+      POSTGRES_USER: devonn
+      POSTGRES_PASSWORD: devonn_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devonn"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and job queues
+  redis:
+    image: redis:7-alpine
+    container_name: devonn-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO for S3-compatible storage
+  minio:
+    image: minio/minio:latest
+    container_name: devonn-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: devonn_minio
+      MINIO_ROOT_PASSWORD: devonn_minio_password
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Mock AI Service (simulates OpenAI/Claude/etc.)
+  mock-ai-service:
+    build:
+      context: ./services/mock-ai
+      dockerfile: Dockerfile
+    container_name: devonn-mock-ai
+    ports:
+      - "8001:8001"
+    environment:
+      - SERVICE_NAME=mock-ai-service
+      - LOG_LEVEL=INFO
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+
+  # Mock TTS Service (simulates ElevenLabs)
+  mock-tts-service:
+    build:
+      context: ./services/mock-tts
+      dockerfile: Dockerfile
+    container_name: devonn-mock-tts
+    ports:
+      - "8002:8002"
+    environment:
+      - SERVICE_NAME=mock-tts-service
+      - LOG_LEVEL=INFO
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+
+  # Mock Image Generation Service (simulates Stable Diffusion)
+  mock-image-gen:
+    build:
+      context: ./services/mock-image-gen
+      dockerfile: Dockerfile
+    container_name: devonn-mock-image-gen
+    ports:
+      - "8003:8003"
+    environment:
+      - SERVICE_NAME=mock-image-gen
+      - LOG_LEVEL=INFO
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+
+  # Backend API (FastAPI)
+  backend:
+    build:
+      context: ./services/backend
+      dockerfile: Dockerfile
+    container_name: devonn-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://devonn:devonn_dev_password@postgres:5432/devonn_ai
+      - REDIS_URL=redis://redis:6379/0
+      - S3_ENDPOINT_URL=http://minio:9000
+      - S3_ACCESS_KEY_ID=devonn_minio
+      - S3_SECRET_ACCESS_KEY=devonn_minio_password
+      - OPENAI_API_URL=http://mock-ai-service:8001
+      - ELEVENLABS_API_URL=http://mock-tts-service:8002
+      - STABILITY_API_URL=http://mock-image-gen:8003
+      - JWT_SECRET_KEY=dev_secret_key_change_in_production
+      - APP_ENV=sandbox
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mock-ai-service:
+        condition: service_healthy
+      mock-tts-service:
+        condition: service_healthy
+      mock-image-gen:
+        condition: service_healthy
+    volumes:
+      - ./services/backend:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+
+  # Celery Worker for background tasks
+  celery-worker:
+    build:
+      context: ./services/backend
+      dockerfile: Dockerfile
+    container_name: devonn-celery-worker
+    command: celery -A app.worker worker --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql://devonn:devonn_dev_password@postgres:5432/devonn_ai
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - S3_ENDPOINT_URL=http://minio:9000
+      - S3_ACCESS_KEY_ID=devonn_minio
+      - S3_SECRET_ACCESS_KEY=devonn_minio_password
+    depends_on:
+      - redis
+      - postgres
+      - backend
+    volumes:
+      - ./services/backend:/app
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: devonn-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./configs/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  default:
+    name: devonn-network
