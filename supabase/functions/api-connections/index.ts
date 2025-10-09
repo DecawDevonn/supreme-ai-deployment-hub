@@ -202,7 +202,7 @@ serve(async (req) => {
 
       const { data: connection, error: fetchError } = await supabase
         .from('api_connections')
-        .select('*')
+        .select('id, service_name, auth_type, credentials')
         .eq('id', connectionId)
         .eq('user_id', user.id)
         .single();

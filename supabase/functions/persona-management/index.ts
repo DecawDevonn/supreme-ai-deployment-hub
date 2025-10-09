@@ -13,7 +13,48 @@ serve(async (req) => {
   }
 
   try {
-    // Use service role key to bypass RLS for admin operations
+    // First, verify the user is authenticated
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create client with user's token for authentication
+    const supabaseUser = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: { headers: { Authorization: authHeader } },
+        auth: { autoRefreshToken: false, persistSession: false }
+      }
+    );
+
+    // Verify user and admin status
+    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user is admin using RPC
+    const { data: isAdmin, error: adminError } = await supabaseUser.rpc('is_admin', { _user_id: user.id });
+    
+    if (adminError || !isAdmin) {
+      console.error('[persona-management] Admin check failed:', adminError);
+      return new Response(
+        JSON.stringify({ error: 'Admin access required for persona management' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('[persona-management] Admin user authenticated:', user.id);
+
+    // Now use service role key to bypass RLS for admin operations
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
