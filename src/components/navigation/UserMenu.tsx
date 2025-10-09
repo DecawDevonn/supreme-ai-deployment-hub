@@ -1,6 +1,7 @@
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useAdminStatus } from '@/hooks/useAdminStatus';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/button';
 
 export const UserMenu = () => {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdminStatus();
   const navigate = useNavigate();
 
   if (!user) return null;
@@ -39,6 +41,15 @@ export const UserMenu = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {isAdmin && (
+          <>
+            <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer">
+              <Shield className="mr-2 h-4 w-4" />
+              <span>Admin Dashboard</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
         <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sign out</span>
