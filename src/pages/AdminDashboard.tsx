@@ -36,7 +36,7 @@ const AdminDashboard: React.FC = () => {
       const [personas, workflows, connections] = await Promise.all([
         supabase.from('personas').select('id', { count: 'exact', head: true }),
         supabase.from('workflows').select('id', { count: 'exact', head: true }),
-        supabase.from('api_connections_safe').select('id', { count: 'exact', head: true }),
+        supabase.from('api_connections').select('id', { count: 'exact', head: true }),
       ]);
 
       setStats({
