@@ -407,7 +407,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      api_connections_metadata: {
+        Row: {
+          auth_type: Database["public"]["Enums"]["auth_type"] | null
+          created_at: string | null
+          id: string | null
+          is_valid: boolean | null
+          last_validated_at: string | null
+          service_name: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth_type?: Database["public"]["Enums"]["auth_type"] | null
+          created_at?: string | null
+          id?: string | null
+          is_valid?: boolean | null
+          last_validated_at?: string | null
+          service_name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth_type?: Database["public"]["Enums"]["auth_type"] | null
+          created_at?: string | null
+          id?: string | null
+          is_valid?: boolean | null
+          last_validated_at?: string | null
+          service_name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       decrypt_credentials: {
