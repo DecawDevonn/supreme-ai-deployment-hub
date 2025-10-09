@@ -161,6 +161,42 @@ export type Database = {
         }
         Relationships: []
       }
+      legacy_workflows: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          name: string
+          notes: string | null
+          path: string | null
+          tags: string[] | null
+          updated_at: string | null
+          user_id: string | null
+          workflow_id: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          name: string
+          notes?: string | null
+          path?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+          workflow_id?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          name?: string
+          notes?: string | null
+          path?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+          workflow_id?: number
+        }
+        Relationships: []
+      }
       persona_prompts: {
         Row: {
           created_at: string

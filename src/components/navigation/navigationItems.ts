@@ -10,6 +10,7 @@ export const navigationItems = [
   { name: 'Local AI', path: '/local-ai' },
   { name: 'Music Studio', path: '/music-studio' },
   { name: 'Workflows', path: '/workflows' },
+  { name: 'Legacy Workflows', path: '/legacy-workflows' },
   { name: 'API', path: '/api' },
   { name: 'Advanced AI', path: '/advanced-ai' },
   { name: 'About', path: '/about' },
