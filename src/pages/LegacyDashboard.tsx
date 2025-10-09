@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import { Plus, RefreshCw, Save, Trash2, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { legacyWorkflowService, LegacyWorkflow } from '@/services/legacyWorkflowService';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,28 @@ const LegacyDashboard: React.FC = () => {
 
   useEffect(() => {
     loadWorkflows();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('legacy-workflows-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'legacy_workflows'
+        },
+        (payload) => {
+          console.log('Real-time update:', payload);
+          // Reload workflows on any change
+          loadWorkflows();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
