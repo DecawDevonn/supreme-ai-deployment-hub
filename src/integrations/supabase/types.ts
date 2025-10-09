@@ -170,7 +170,7 @@ export type Database = {
           path: string | null
           tags: string[] | null
           updated_at: string | null
-          user_id: string | null
+          user_id: string
           workflow_id: number
         }
         Insert: {
@@ -181,7 +181,7 @@ export type Database = {
           path?: string | null
           tags?: string[] | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
           workflow_id?: number
         }
         Update: {
@@ -192,7 +192,7 @@ export type Database = {
           path?: string | null
           tags?: string[] | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
           workflow_id?: number
         }
         Relationships: []
@@ -236,6 +236,7 @@ export type Database = {
           created_at: string
           id: string
           identity: Json | null
+          is_public: boolean
           memory_hooks: Json | null
           name: string
           persona_id: string
@@ -251,6 +252,7 @@ export type Database = {
           created_at?: string
           id?: string
           identity?: Json | null
+          is_public?: boolean
           memory_hooks?: Json | null
           name: string
           persona_id: string
@@ -266,6 +268,7 @@ export type Database = {
           created_at?: string
           id?: string
           identity?: Json | null
+          is_public?: boolean
           memory_hooks?: Json | null
           name?: string
           persona_id?: string
@@ -404,7 +407,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      api_connections_safe: {
+        Row: {
+          auth_type: Database["public"]["Enums"]["auth_type"] | null
+          created_at: string | null
+          id: string | null
+          is_valid: boolean | null
+          last_validated_at: string | null
+          service_name: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth_type?: Database["public"]["Enums"]["auth_type"] | null
+          created_at?: string | null
+          id?: string | null
+          is_valid?: boolean | null
+          last_validated_at?: string | null
+          service_name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth_type?: Database["public"]["Enums"]["auth_type"] | null
+          created_at?: string | null
+          id?: string | null
+          is_valid?: boolean | null
+          last_validated_at?: string | null
+          service_name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       decrypt_credentials: {
