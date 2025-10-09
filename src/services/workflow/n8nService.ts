@@ -151,6 +151,96 @@ export class N8nService {
   getWorkflowTemplates(): WorkflowTemplate[] {
     return [
       {
+        id: 'film-ai-enhanced',
+        name: 'AI-Enhanced Film Production',
+        description: 'Complete AI-powered filmmaking pipeline from script to final footage using LTX Studio',
+        category: 'ai-agent',
+        popularity: 92,
+        featured: true,
+        workflow: {
+          name: 'AI-Enhanced Film Production',
+          category: 'ai-agent',
+          nodes: [
+            {
+              id: 'script-upload',
+              type: 'stage',
+              name: 'Script Upload',
+              parameters: {
+                description: 'Upload and parse the film script',
+                source: 'LTX Studio'
+              },
+              position: { x: 100, y: 100 }
+            },
+            {
+              id: 'ltx-storyboard',
+              type: 'tool',
+              name: 'LTX Storyboarding',
+              parameters: {
+                platform: 'LTX Studio',
+                autoGenerate: true
+              },
+              position: { x: 300, y: 100 }
+            },
+            {
+              id: 'script-parser',
+              type: 'agent',
+              name: 'Script Parser Agent',
+              parameters: {
+                model: 'gpt-4',
+                task: 'Parse and structure script elements'
+              },
+              position: { x: 500, y: 50 }
+            },
+            {
+              id: 'visual-synth',
+              type: 'agent',
+              name: 'Visual Synthesizer',
+              parameters: {
+                model: 'stable-diffusion',
+                task: 'Generate visual assets from script descriptions'
+              },
+              position: { x: 700, y: 50 }
+            },
+            {
+              id: 'sequencer',
+              type: 'agent',
+              name: 'Scene Sequencer',
+              parameters: {
+                task: 'Assemble and sequence generated scenes'
+              },
+              position: { x: 900, y: 100 }
+            },
+            {
+              id: 'prop-forge',
+              type: 'agent',
+              name: 'Prop Forge',
+              parameters: {
+                task: 'Generate and integrate 3D props'
+              },
+              position: { x: 500, y: 200 }
+            },
+            {
+              id: 'compositor',
+              type: 'agent',
+              name: 'Scene Compositor',
+              parameters: {
+                task: 'Blend footage and AI-generated elements'
+              },
+              position: { x: 700, y: 200 }
+            },
+            {
+              id: 'post-fx',
+              type: 'agent',
+              name: 'Post FX',
+              parameters: {
+                task: 'Apply color grading and final effects'
+              },
+              position: { x: 1100, y: 100 }
+            }
+          ]
+        }
+      },
+      {
         id: 'deploy-k8s',
         name: 'Kubernetes Deployment',
         description: 'Complete CI/CD pipeline for Kubernetes deployments',
