@@ -418,6 +418,26 @@ export type Database = {
           updated_at: string | null
           user_id: string | null
         }
+        Insert: {
+          auth_type?: Database["public"]["Enums"]["auth_type"] | null
+          created_at?: string | null
+          id?: string | null
+          is_valid?: boolean | null
+          last_validated_at?: string | null
+          service_name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth_type?: Database["public"]["Enums"]["auth_type"] | null
+          created_at?: string | null
+          id?: string | null
+          is_valid?: boolean | null
+          last_validated_at?: string | null
+          service_name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
         Relationships: []
       }
     }
@@ -429,19 +449,6 @@ export type Database = {
       encrypt_credentials: {
         Args: { credentials_json: Json; encryption_key: string }
         Returns: string
-      }
-      get_api_connections_metadata: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          auth_type: Database["public"]["Enums"]["auth_type"]
-          created_at: string
-          id: string
-          is_valid: boolean
-          last_validated_at: string
-          service_name: string
-          updated_at: string
-          user_id: string
-        }[]
       }
       is_admin: {
         Args: { _user_id: string }
