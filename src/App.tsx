@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import Navbar from "./components/Navbar";
@@ -17,8 +16,8 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import AgentDashboard from "./pages/AgentDashboard";
 import FlowEditor from "./pages/FlowEditor";
-import AgentDemo from "./pages/AgentDemo"; // Import the new AgentDemo page
-import EnhancedAgentDemo from "./pages/EnhancedAgentDemo"; // Enhanced multi-provider platform
+import AgentDemo from "./pages/AgentDemo";
+import EnhancedAgentDemo from "./pages/EnhancedAgentDemo";
 import AdvancedAI from "./pages/AdvancedAI";
 import DeploymentReadiness from "./pages/DeploymentReadiness";
 import LocalAI from "./pages/LocalAI";
@@ -37,55 +36,67 @@ import { AGUIProvider } from "./contexts/agui/AGUIContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Auth from "./pages/Auth";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { SidebarProvider } from "./components/ui/sidebar";
+import { AppSidebar } from "./components/AppSidebar";
 
 function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <AuthProvider>
-      <DeploymentProvider>
-        <APIProvider>
-          <ChatProvider>
-            <AGUIProvider>
-              <Router>
-                <Navbar />
-                <main className="min-h-screen">
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/deployment" element={<DeploymentDashboard />} />
-                    <Route path="/api" element={<ApiConnections />} />
-                    <Route path="/documentation" element={<Documentation />} />
-                    <Route path="/agents" element={<AgentDashboard />} />
-                    <Route path="/devonn" element={<DevonnDashboard />} />
-                    <Route path="/flow" element={<FlowEditor />} />
-                    <Route path="/workflows" element={<WorkflowManagement />} />
-                    <Route path="/agent-demo" element={<AgentDemo />} /> {/* Add the new route */}
-                    <Route path="/enhanced-agents" element={<EnhancedAgentDemo />} /> {/* Enhanced multi-LLM platform */}
-                    <Route path="/advanced-ai" element={<AdvancedAI />} /> {/* Advanced AI Agent with cutting-edge features */}
-                    <Route path="/deployment-readiness" element={<DeploymentReadiness />} /> {/* Supreme AI Deployment Hub */}
-                    <Route path="/local-ai" element={<LocalAI />} /> {/* Pinokio-style local AI tools manager */}
-                    <Route path="/music-studio" element={<MusicStudio />} /> {/* OpenUdio Matrix-inspired music generation */}
-                    <Route path="/auth" element={<Auth />} /> {/* Authentication page */}
-                    <Route path="/devonn-chat" element={<ProtectedRoute><DevonnChat /></ProtectedRoute>} /> {/* Devonn.ai Copilot with KG tracking */}
-                    <Route path="/cookbook" element={<Cookbook />} /> {/* Devonn.ai Cookbook documentation */}
-                    <Route path="/about" element={<About />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/sandbox" element={<Sandbox />} />
-                    <Route path="/legacy-workflows" element={<ProtectedRoute><LegacyDashboard /></ProtectedRoute>} />
-                    <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/privacy" element={<Privacy />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-                <Footer />
-              </Router>
-              <Toaster />
-            </AGUIProvider>
-          </ChatProvider>
-        </APIProvider>
-      </DeploymentProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <AuthProvider>
+          <DeploymentProvider>
+            <APIProvider>
+              <ChatProvider>
+                <AGUIProvider>
+                  <Router>
+                    <SidebarProvider>
+                      <div className="min-h-screen flex w-full">
+                        <AppSidebar />
+                        <div className="flex-1 flex flex-col">
+                          <Navbar />
+                          <main className="flex-1">
+                            <Routes>
+                              <Route path="/" element={<Index />} />
+                              <Route path="/deployment" element={<DeploymentDashboard />} />
+                              <Route path="/api" element={<ApiConnections />} />
+                              <Route path="/documentation" element={<Documentation />} />
+                              <Route path="/agents" element={<AgentDashboard />} />
+                              <Route path="/devonn" element={<DevonnDashboard />} />
+                              <Route path="/flow" element={<FlowEditor />} />
+                              <Route path="/workflows" element={<WorkflowManagement />} />
+                              <Route path="/agent-demo" element={<AgentDemo />} />
+                              <Route path="/enhanced-agents" element={<EnhancedAgentDemo />} />
+                              <Route path="/advanced-ai" element={<AdvancedAI />} />
+                              <Route path="/deployment-readiness" element={<DeploymentReadiness />} />
+                              <Route path="/local-ai" element={<LocalAI />} />
+                              <Route path="/music-studio" element={<MusicStudio />} />
+                              <Route path="/auth" element={<Auth />} />
+                              <Route path="/devonn-chat" element={<ProtectedRoute><DevonnChat /></ProtectedRoute>} />
+                              <Route path="/cookbook" element={<Cookbook />} />
+                              <Route path="/about" element={<About />} />
+                              <Route path="/contact" element={<Contact />} />
+                              <Route path="/sandbox" element={<Sandbox />} />
+                              <Route path="/legacy-workflows" element={<ProtectedRoute><LegacyDashboard /></ProtectedRoute>} />
+                              <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                              <Route path="/terms" element={<Terms />} />
+                              <Route path="/privacy" element={<Privacy />} />
+                              <Route path="*" element={<NotFound />} />
+                            </Routes>
+                          </main>
+                          <Footer />
+                        </div>
+                      </div>
+                    </SidebarProvider>
+                    <Toaster />
+                  </Router>
+                </AGUIProvider>
+              </ChatProvider>
+            </APIProvider>
+          </DeploymentProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 
