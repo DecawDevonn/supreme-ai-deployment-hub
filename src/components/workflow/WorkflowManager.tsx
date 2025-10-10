@@ -9,12 +9,23 @@ import WorkflowBuilder from './WorkflowBuilder';
 import WorkflowTemplates from './WorkflowTemplates';
 import { Play, Pause, MoreVertical, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { DndContext, DragEndEvent, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableItem } from '@/components/ui/sortable-item';
 
 const WorkflowManager: React.FC = () => {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [executions, setExecutions] = useState<WorkflowExecution[]>([]);
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   useEffect(() => {
     loadWorkflows();
@@ -107,6 +118,18 @@ const WorkflowManager: React.FC = () => {
     );
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setWorkflows((items) => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -128,46 +151,56 @@ const WorkflowManager: React.FC = () => {
         </TabsList>
 
         <TabsContent value="workflows" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {workflows.map(workflow => (
-              <Card key={workflow.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-base">{workflow.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{workflow.description}</p>
-                    </div>
-                    <Badge variant={workflow.active ? 'default' : 'secondary'}>
-                      {workflow.active ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-muted-foreground">
-                      {workflow.nodes.length} nodes
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => setSelectedWorkflow(workflow)}
-                      >
-                        Edit
-                      </Button>
-                      <Button 
-                        size="sm"
-                        onClick={() => handleExecuteWorkflow(workflow)}
-                        disabled={!workflow.active}
-                      >
-                        <Play className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={workflows.map(w => w.id)} strategy={verticalListSortingStrategy}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {workflows.map(workflow => (
+                  <SortableItem key={workflow.id} id={workflow.id} className="group">
+                    <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="text-base">{workflow.name}</CardTitle>
+                            <p className="text-sm text-muted-foreground">{workflow.description}</p>
+                          </div>
+                          <Badge variant={workflow.active ? 'default' : 'secondary'}>
+                            {workflow.active ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-muted-foreground">
+                            {workflow.nodes.length} nodes
+                          </div>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => setSelectedWorkflow(workflow)}
+                            >
+                              Edit
+                            </Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => handleExecuteWorkflow(workflow)}
+                              disabled={!workflow.active}
+                            >
+                              <Play className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </SortableItem>
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
 
           {workflows.length === 0 && (
             <div className="text-center py-12">
