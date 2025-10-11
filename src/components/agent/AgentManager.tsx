@@ -43,33 +43,11 @@ steps:
   // Initialize WebSocket connection for logs
   useEffect(() => {
     try {
-      // Get token from localStorage if available
-      const token = localStorage.getItem("authToken") || "guest-token";
-      
-      // Create WebSocket connection
-      socketRef.current = new WebSocket(`ws://localhost:8000/ws/logs?token=${token}`);
-      
-      // Setup message handler
-      socketRef.current.onmessage = (event) => {
-        setLogMessages(prev => [...prev, event.data]);
-      };
-      
-      // Setup error handler
-      socketRef.current.onerror = (error) => {
-        console.error("WebSocket error:", error);
-        // Add error message to logs
-        setLogMessages(prev => [...prev, `[ERROR] WebSocket connection failed. Real-time logs unavailable.`]);
-      };
-      
-      // Cleanup function
-      return () => {
-        if (socketRef.current) {
-          socketRef.current.close();
-        }
-      };
+      // Note: WebSocket connections without proper authentication are disabled for security
+      // Real-time logs should be implemented using authenticated connections
+      setLogMessages([`[INFO] Real-time logs feature is currently disabled. Check the logs tab after workflow execution.`]);
     } catch (error) {
-      console.error("Failed to initialize WebSocket:", error);
-      setLogMessages([`[ERROR] WebSocket initialization failed. Real-time logs unavailable.`]);
+      setLogMessages([`[ERROR] WebSocket initialization failed.`]);
     }
   }, []);
 

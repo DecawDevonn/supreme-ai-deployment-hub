@@ -442,6 +442,10 @@ export type Database = {
       }
     }
     Functions: {
+      claim_first_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       decrypt_credentials: {
         Args: { encrypted_data: string; encryption_key: string }
         Returns: Json

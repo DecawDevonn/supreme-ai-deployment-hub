@@ -111,7 +111,7 @@ GRAFANA_URL=http://grafana:3000`;
                 <ul className="list-disc list-inside text-sm space-y-1">
                   <li>Access Prometheus dashboard at: <code>http://&lt;node-ip&gt;:9090</code></li>
                   <li>Access Grafana dashboard at: <code>http://&lt;node-ip&gt;:3000</code></li>
-                  <li>Default Grafana credentials: admin/admin</li>
+                  <li className="text-amber-600 font-medium">⚠️ SECURITY: Change default Grafana password immediately after first login!</li>
                 </ul>
               </div>
             </div>

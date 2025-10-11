@@ -104,12 +104,35 @@ serve(async (req) => {
 
       if (!service_name || !auth_type || !credentials) {
         return new Response(
-          JSON.stringify({ error: 'Missing required fields: service_name, auth_type, credentials' }),
+          JSON.stringify({ error: 'Missing required fields' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      console.log(`Creating connection for ${service_name} with auth type ${auth_type}`);
+      // Input validation
+      const allowedServices = ['github', 'slack', 'openai', 'custom'];
+      const allowedAuthTypes = ['api_key', 'oauth2', 'basic_auth', 'bearer_token'];
+      
+      if (typeof service_name !== 'string' || service_name.length > 255 || service_name.length < 1) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid service name' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (!allowedAuthTypes.includes(auth_type)) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid authentication type' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (typeof credentials !== 'object' || credentials === null) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid credentials format' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
       // Validate credentials
       const isValid = await validateCredentials(service_name, auth_type, credentials);
@@ -152,9 +175,8 @@ serve(async (req) => {
         .single();
 
       if (error) {
-        console.error('Database error:', error);
         return new Response(
-          JSON.stringify({ error: error.message }),
+          JSON.stringify({ error: 'Failed to create connection' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -270,9 +292,8 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in api-connections function:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: 'An error occurred processing your request' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

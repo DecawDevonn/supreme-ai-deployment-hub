@@ -49,26 +49,30 @@ export const AdminBootstrap: React.FC = () => {
 
     setIsProcessing(true);
     try {
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: user.id,
-          role: 'admin'
-        });
+      const { data: success, error } = await supabase.rpc('claim_first_admin', {
+        _user_id: user.id
+      });
 
       if (error) throw error;
 
-      toast({
-        title: 'Success',
-        description: 'You are now an admin. Please refresh the page.',
-      });
-
-      await checkAdminStatus();
+      if (success) {
+        toast({
+          title: 'Success',
+          description: 'You are now an admin. Please refresh the page.',
+        });
+        await checkAdminStatus();
+      } else {
+        toast({
+          title: 'Info',
+          description: 'Another user has already claimed admin privileges.',
+          variant: 'default',
+        });
+        await checkAdminStatus();
+      }
     } catch (error: any) {
-      console.error('Error becoming admin:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to set admin role',
+        description: 'Failed to set admin role. Please try again.',
         variant: 'destructive',
       });
     } finally {
