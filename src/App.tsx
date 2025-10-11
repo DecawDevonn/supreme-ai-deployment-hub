@@ -28,6 +28,10 @@ import MusicStudio from "./pages/MusicStudio";
 import DevonnChat from "./pages/DevonnChat";
 import Cookbook from "./pages/Cookbook";
 import DevonnTV from "./pages/DevonnTV";
+import CategoryPage from "./pages/CategoryPage";
+import VideoDetail from "./pages/VideoDetail";
+import CourseDetail from "./pages/CourseDetail";
+import UserDashboard from "./pages/UserDashboard";
 import Sandbox from "./pages/Sandbox";
 import LegacyDashboard from "./pages/LegacyDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -79,6 +83,10 @@ function App() {
                               <Route path="/local-ai" element={<LocalAI />} />
                               <Route path="/music-studio" element={<MusicStudio />} />
                               <Route path="/devonn-tv" element={<DevonnTV />} />
+                              <Route path="/devonn-tv/category/:slug" element={<CategoryPage />} />
+                              <Route path="/devonn-tv/video/:id" element={<VideoDetail />} />
+                              <Route path="/devonn-tv/course/:id" element={<CourseDetail />} />
+                              <Route path="/devonn-tv/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
                               <Route path="/auth" element={<Auth />} />
                               <Route path="/devonn-chat" element={<ProtectedRoute><DevonnChat /></ProtectedRoute>} />
                               <Route path="/cookbook" element={<Cookbook />} />
