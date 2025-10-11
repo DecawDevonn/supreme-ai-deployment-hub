@@ -27,6 +27,7 @@ import LocalAI from "./pages/LocalAI";
 import MusicStudio from "./pages/MusicStudio";
 import DevonnChat from "./pages/DevonnChat";
 import Cookbook from "./pages/Cookbook";
+import DevonnTV from "./pages/DevonnTV";
 import Sandbox from "./pages/Sandbox";
 import LegacyDashboard from "./pages/LegacyDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -77,6 +78,7 @@ function App() {
                               <Route path="/deployment-readiness" element={<DeploymentReadiness />} />
                               <Route path="/local-ai" element={<LocalAI />} />
                               <Route path="/music-studio" element={<MusicStudio />} />
+                              <Route path="/devonn-tv" element={<DevonnTV />} />
                               <Route path="/auth" element={<Auth />} />
                               <Route path="/devonn-chat" element={<ProtectedRoute><DevonnChat /></ProtectedRoute>} />
                               <Route path="/cookbook" element={<Cookbook />} />

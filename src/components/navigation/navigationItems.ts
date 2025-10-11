@@ -9,6 +9,7 @@ export const navigationItems = [
   { name: 'Devonn Chat', path: '/devonn-chat' },
   { name: 'Local AI', path: '/local-ai' },
   { name: 'Music Studio', path: '/music-studio' },
+  { name: 'Devonn.TV', path: '/devonn-tv' },
   { name: 'Workflows', path: '/workflows' },
   { name: 'Legacy Workflows', path: '/legacy-workflows' },
   { name: 'MCP Catalog', path: '/mcp-catalog' },
