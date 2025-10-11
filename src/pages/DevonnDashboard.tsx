@@ -8,6 +8,7 @@ import OpenManusEditor from '@/components/builder/OpenManusEditor';
 import AgentDashboard from '@/components/dashboard/AgentDashboard';
 import SkillParser from '@/components/skills/SkillParser';
 import ChatUI from '@/components/chat/ChatUI';
+import MarketplaceView from '@/components/marketplace/MarketplaceView';
 import { toast } from 'sonner';
 
 const DevonnDashboard = () => {
@@ -24,11 +25,12 @@ const DevonnDashboard = () => {
         </SectionHeading>
         
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid grid-cols-5 w-full max-w-4xl mx-auto">
+          <TabsList className="grid grid-cols-6 w-full max-w-5xl mx-auto">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="builder">Agent Builder</TabsTrigger>
             <TabsTrigger value="yaml">OpenManus Editor</TabsTrigger>
             <TabsTrigger value="skills">Skill Parser</TabsTrigger>
+            <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
             <TabsTrigger value="chat">Chat</TabsTrigger>
           </TabsList>
           
@@ -52,6 +54,10 @@ const DevonnDashboard = () => {
             <div className="max-w-2xl mx-auto">
               <SkillParser />
             </div>
+          </TabsContent>
+          
+          <TabsContent value="marketplace" className="mt-6">
+            <MarketplaceView />
           </TabsContent>
           
           <TabsContent value="chat" className="mt-6">
