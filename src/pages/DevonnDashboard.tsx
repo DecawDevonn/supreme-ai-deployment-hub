@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Container from '@/components/Container';
 import SectionHeading from '@/components/SectionHeading';
@@ -10,8 +10,19 @@ import SkillParser from '@/components/skills/SkillParser';
 import ChatUI from '@/components/chat/ChatUI';
 import MarketplaceView from '@/components/marketplace/MarketplaceView';
 import { toast } from 'sonner';
+import { useSearchParams } from 'react-router-dom';
 
 const DevonnDashboard = () => {
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabParam || 'dashboard');
+
+  useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
   return (
     <div className="py-8">
       <Container>
@@ -24,7 +35,7 @@ const DevonnDashboard = () => {
           Devonn.AI Dashboard
         </SectionHeading>
         
-        <Tabs defaultValue="dashboard" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid grid-cols-6 w-full max-w-5xl mx-auto">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="builder">Agent Builder</TabsTrigger>

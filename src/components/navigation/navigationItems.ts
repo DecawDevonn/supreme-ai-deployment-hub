@@ -6,6 +6,8 @@ export const navigationItems = [
   { name: 'Deployment', path: '/deployment' },
   { name: 'Sandbox', path: '/sandbox' },
   { name: 'Readiness Hub', path: '/deployment-readiness' },
+  { name: 'Devonn Dashboard', path: '/devonn' },
+  { name: 'Marketplace', path: '/devonn?tab=marketplace' },
   { name: 'Devonn Chat', path: '/devonn-chat' },
   { name: 'Local AI', path: '/local-ai' },
   { name: 'Music Studio', path: '/music-studio' },
