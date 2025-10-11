@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Sparkles, Download, Eye, ChevronRight, Save, FileJson, FileCode, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Loader2, Sparkles, Download, Eye, ChevronRight, Save, FileJson, FileCode, ThumbsUp, ThumbsDown, Network } from 'lucide-react';
 import { workflowGeneratorService } from '@/services/workflow/workflowGeneratorService';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import WorkflowVisualization from './WorkflowVisualization';
 import ExampleWorkflows from './ExampleWorkflows';
+import GraphStudio from './GraphStudio';
 import { Workflow } from '@/types/workflow';
 import { n8nService } from '@/services/workflow/n8nService';
 import * as yaml from 'js-yaml';
@@ -157,6 +158,10 @@ const WorkflowGenerator: React.FC<WorkflowGeneratorProps> = ({ onWorkflowSaved }
         <TabsTrigger value="generator">
           <Sparkles className="h-4 w-4 mr-2" />
           Generator
+        </TabsTrigger>
+        <TabsTrigger value="graph">
+          <Network className="h-4 w-4 mr-2" />
+          Agent Graph
         </TabsTrigger>
         <TabsTrigger value="examples">
           <Eye className="h-4 w-4 mr-2" />
@@ -345,12 +350,27 @@ const WorkflowGenerator: React.FC<WorkflowGeneratorProps> = ({ onWorkflowSaved }
         </Card>
         </>
       )}
-      </TabsContent>
+            </TabsContent>
 
-      <TabsContent value="examples">
-        <ExampleWorkflows onSelectExample={handleSelectExample} />
-      </TabsContent>
-    </Tabs>
+            <TabsContent value="graph">
+              {result?.graph ? (
+                <GraphStudio graph={result.graph} />
+              ) : (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <Network className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">
+                      Generate a workflow to see its multi-agent graph
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="examples">
+              <ExampleWorkflows onSelectExample={handleSelectExample} />
+            </TabsContent>
+          </Tabs>
   );
 };
 

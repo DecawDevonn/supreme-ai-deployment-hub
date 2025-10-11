@@ -1,5 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
+import { graphGeneratorService } from './graphGeneratorService';
+import { WorkflowGraph } from '@/types/graph';
 
 export interface WorkflowGenerationRequest {
   prompt: string;
@@ -12,6 +14,7 @@ export interface WorkflowGenerationResult {
     connections: any;
   };
   template: any;
+  graph?: WorkflowGraph;
 }
 
 // Base templates for different domains
@@ -196,12 +199,21 @@ export class WorkflowGeneratorService {
         name: workflow.name || `${domain.charAt(0).toUpperCase() + domain.slice(1)} Workflow`,
       };
 
-      logger.info('Workflow generation completed', { domain });
+      // Generate multi-agent graph representation
+      const graph = graphGeneratorService.generateGraph(
+        completeWorkflow.meta.instanceId,
+        domain,
+        completeWorkflow.nodes.length,
+        'google/gemini-2.5-flash'
+      );
+
+      logger.info('Workflow generation completed', { domain, graphId: graph.graph_id });
 
       return {
         domain,
         workflow: completeWorkflow,
         template,
+        graph,
       };
     } catch (error) {
       logger.error('Workflow generation failed', { error, retryCount });
