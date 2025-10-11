@@ -1,35 +1,17 @@
 import { Workflow, WorkflowExecution, WorkflowTemplate, N8nCredentials } from '@/types/workflow';
+import { supabase } from '@/integrations/supabase/client';
 
 export class N8nService {
-  private baseUrl: string;
-  private apiKey: string;
-
-  constructor(baseUrl: string = 'http://localhost:5678', apiKey: string = '') {
-    this.baseUrl = baseUrl;
-    this.apiKey = apiKey;
-  }
-
-  private async request(endpoint: string, options: RequestInit = {}) {
-    const response = await fetch(`${this.baseUrl}/api/v1${endpoint}`, {
-      ...options,
-      headers: {
-        'X-N8N-API-KEY': this.apiKey,
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`n8n API error: ${response.statusText}`);
-    }
-
-    return response.json();
-  }
-
   async getWorkflows(): Promise<Workflow[]> {
     try {
-      const data = await this.request('/workflows');
-      return data.data || [];
+      const { data, error } = await supabase
+        .from('workflows')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map(this.mapFromDatabase);
     } catch (error) {
       console.error('Failed to fetch workflows:', error);
       return this.getMockWorkflows();
@@ -38,8 +20,14 @@ export class N8nService {
 
   async getWorkflow(id: string): Promise<Workflow | null> {
     try {
-      const data = await this.request(`/workflows/${id}`);
-      return data.data;
+      const { data, error } = await supabase
+        .from('workflows')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      return data ? this.mapFromDatabase(data) : null;
     } catch (error) {
       console.error('Failed to fetch workflow:', error);
       return null;
@@ -48,11 +36,19 @@ export class N8nService {
 
   async createWorkflow(workflow: Partial<Workflow>): Promise<Workflow> {
     try {
-      const data = await this.request('/workflows', {
-        method: 'POST',
-        body: JSON.stringify(workflow),
-      });
-      return data.data;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const dbWorkflow = this.mapToDatabase(workflow, user.id);
+      
+      const { data, error } = await supabase
+        .from('workflows')
+        .insert(dbWorkflow)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return this.mapFromDatabase(data);
     } catch (error) {
       console.error('Failed to create workflow:', error);
       throw error;
@@ -61,11 +57,20 @@ export class N8nService {
 
   async updateWorkflow(id: string, workflow: Partial<Workflow>): Promise<Workflow> {
     try {
-      const data = await this.request(`/workflows/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(workflow),
-      });
-      return data.data;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const dbWorkflow = this.mapToDatabase(workflow, user.id);
+      
+      const { data, error } = await supabase
+        .from('workflows')
+        .update(dbWorkflow)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return this.mapFromDatabase(data);
     } catch (error) {
       console.error('Failed to update workflow:', error);
       throw error;
@@ -74,9 +79,12 @@ export class N8nService {
 
   async deleteWorkflow(id: string): Promise<boolean> {
     try {
-      await this.request(`/workflows/${id}`, {
-        method: 'DELETE',
-      });
+      const { error } = await supabase
+        .from('workflows')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
       return true;
     } catch (error) {
       console.error('Failed to delete workflow:', error);
@@ -86,11 +94,32 @@ export class N8nService {
 
   async executeWorkflow(id: string, data?: any): Promise<WorkflowExecution> {
     try {
-      const response = await this.request(`/workflows/${id}/execute`, {
-        method: 'POST',
-        body: JSON.stringify({ data }),
-      });
-      return response.data;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const execution = {
+        workflow_id: id,
+        status: 'pending',
+        input_params: data || {},
+        logs: []
+      };
+
+      const { data: result, error } = await supabase
+        .from('workflow_runs')
+        .insert(execution)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: result.id,
+        workflowId: result.workflow_id,
+        status: result.status as 'running' | 'success' | 'error' | 'waiting' | 'cancelled',
+        startedAt: result.started_at,
+        finishedAt: result.finished_at,
+        executionData: result.output_data
+      };
     } catch (error) {
       console.error('Failed to execute workflow:', error);
       throw error;
@@ -99,9 +128,27 @@ export class N8nService {
 
   async getExecutions(workflowId?: string): Promise<WorkflowExecution[]> {
     try {
-      const endpoint = workflowId ? `/executions?workflowId=${workflowId}` : '/executions';
-      const data = await this.request(endpoint);
-      return data.data || [];
+      let query = supabase
+        .from('workflow_runs')
+        .select('*')
+        .order('started_at', { ascending: false });
+
+      if (workflowId) {
+        query = query.eq('workflow_id', workflowId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      return (data || []).map(run => ({
+        id: run.id,
+        workflowId: run.workflow_id,
+        status: run.status as 'running' | 'success' | 'error' | 'waiting' | 'cancelled',
+        startedAt: run.started_at,
+        finishedAt: run.finished_at,
+        executionData: run.output_data
+      }));
     } catch (error) {
       console.error('Failed to fetch executions:', error);
       return [];
@@ -109,13 +156,39 @@ export class N8nService {
   }
 
   async getCredentials(): Promise<N8nCredentials[]> {
-    try {
-      const data = await this.request('/credentials');
-      return data.data || [];
-    } catch (error) {
-      console.error('Failed to fetch credentials:', error);
-      return [];
-    }
+    // Credentials are not implemented in this version
+    return [];
+  }
+
+  private mapFromDatabase(dbWorkflow: any): Workflow {
+    const definition = dbWorkflow.definition || {};
+    return {
+      id: dbWorkflow.id,
+      name: dbWorkflow.name,
+      description: dbWorkflow.description || '',
+      active: definition.active || false,
+      nodes: definition.nodes || [],
+      connections: definition.connections || {},
+      createdAt: dbWorkflow.created_at,
+      updatedAt: dbWorkflow.updated_at,
+      category: definition.category,
+      tags: definition.tags || []
+    };
+  }
+
+  private mapToDatabase(workflow: Partial<Workflow>, userId: string): any {
+    return {
+      name: workflow.name,
+      description: workflow.description,
+      user_id: userId,
+      definition: {
+        active: workflow.active,
+        nodes: workflow.nodes,
+        connections: workflow.connections,
+        category: workflow.category,
+        tags: workflow.tags
+      }
+    };
   }
 
   // Mock data for development

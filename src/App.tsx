@@ -64,7 +64,7 @@ function App() {
                               <Route path="/agents" element={<AgentDashboard />} />
                               <Route path="/devonn" element={<DevonnDashboard />} />
                               <Route path="/flow" element={<FlowEditor />} />
-                              <Route path="/workflows" element={<WorkflowManagement />} />
+                              <Route path="/workflows" element={<ProtectedRoute><WorkflowManagement /></ProtectedRoute>} />
                               <Route path="/agent-demo" element={<AgentDemo />} />
                               <Route path="/enhanced-agents" element={<EnhancedAgentDemo />} />
                               <Route path="/advanced-ai" element={<AdvancedAI />} />
