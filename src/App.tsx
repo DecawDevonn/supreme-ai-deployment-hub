@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Index from "./pages/Index";
 import WorkflowManagement from "./pages/WorkflowManagement";
+import RemoveDuplicatesDemo from "./pages/RemoveDuplicatesDemo";
 import DeploymentDashboard from "./pages/DeploymentDashboard";
 import APIManagement from "./pages/APIManagement";
 import ApiConnections from "./pages/ApiConnections";
@@ -64,7 +65,8 @@ function App() {
                               <Route path="/agents" element={<AgentDashboard />} />
                               <Route path="/devonn" element={<DevonnDashboard />} />
                               <Route path="/flow" element={<FlowEditor />} />
-                              <Route path="/workflows" element={<ProtectedRoute><WorkflowManagement /></ProtectedRoute>} />
+            <Route path="/workflows" element={<ProtectedRoute><WorkflowManagement /></ProtectedRoute>} />
+            <Route path="/remove-duplicates-demo" element={<RemoveDuplicatesDemo />} />
                               <Route path="/agent-demo" element={<AgentDemo />} />
                               <Route path="/enhanced-agents" element={<EnhancedAgentDemo />} />
                               <Route path="/advanced-ai" element={<AdvancedAI />} />
