@@ -12,6 +12,7 @@ export const navigationItems = [
   { name: 'Workflows', path: '/workflows' },
   { name: 'Legacy Workflows', path: '/legacy-workflows' },
   { name: 'MCP Catalog', path: '/mcp-catalog' },
+  { name: 'MCP Management', path: '/mcp-management' },
   { name: 'API', path: '/api' },
   { name: 'Advanced AI', path: '/advanced-ai' },
   { name: 'About', path: '/about' },

@@ -6,6 +6,7 @@ import Index from "./pages/Index";
 import WorkflowManagement from "./pages/WorkflowManagement";
 import RemoveDuplicatesDemo from "./pages/RemoveDuplicatesDemo";
 import MCPCatalog from "./pages/MCPCatalog";
+import MCPManagement from "./pages/MCPManagement";
 import DeploymentDashboard from "./pages/DeploymentDashboard";
 import APIManagement from "./pages/APIManagement";
 import ApiConnections from "./pages/ApiConnections";
@@ -69,6 +70,7 @@ function App() {
             <Route path="/workflows" element={<ProtectedRoute><WorkflowManagement /></ProtectedRoute>} />
             <Route path="/remove-duplicates-demo" element={<RemoveDuplicatesDemo />} />
             <Route path="/mcp-catalog" element={<MCPCatalog />} />
+            <Route path="/mcp-management" element={<MCPManagement />} />
                               <Route path="/agent-demo" element={<AgentDemo />} />
                               <Route path="/enhanced-agents" element={<EnhancedAgentDemo />} />
                               <Route path="/advanced-ai" element={<AdvancedAI />} />
