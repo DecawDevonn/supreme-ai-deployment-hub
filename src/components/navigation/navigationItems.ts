@@ -11,6 +11,7 @@ export const navigationItems = [
   { name: 'Music Studio', path: '/music-studio' },
   { name: 'Workflows', path: '/workflows' },
   { name: 'Legacy Workflows', path: '/legacy-workflows' },
+  { name: 'MCP Catalog', path: '/mcp-catalog' },
   { name: 'API', path: '/api' },
   { name: 'Advanced AI', path: '/advanced-ai' },
   { name: 'About', path: '/about' },
