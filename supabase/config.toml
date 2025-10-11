@@ -26,3 +26,9 @@ verify_jwt = true
 
 [functions.api-connections]
 verify_jwt = true
+
+[functions.classify-workflow-domain]
+verify_jwt = false
+
+[functions.generate-workflow-json]
+verify_jwt = false

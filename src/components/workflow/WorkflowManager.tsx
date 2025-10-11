@@ -7,7 +7,8 @@ import { Workflow, WorkflowExecution, WorkflowTemplate } from '@/types/workflow'
 import { n8nService } from '@/services/workflow/n8nService';
 import WorkflowBuilder from './WorkflowBuilder';
 import WorkflowTemplates from './WorkflowTemplates';
-import { Play, Pause, MoreVertical, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import WorkflowGenerator from './WorkflowGenerator';
+import { Play, Pause, MoreVertical, Clock, CheckCircle, XCircle, AlertCircle, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { DndContext, DragEndEvent, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -145,6 +146,10 @@ const WorkflowManager: React.FC = () => {
       <Tabs defaultValue="workflows" className="space-y-6">
         <TabsList>
           <TabsTrigger value="workflows">My Workflows</TabsTrigger>
+          <TabsTrigger value="ai-generator">
+            <Sparkles className="h-4 w-4 mr-2" />
+            AI Generator
+          </TabsTrigger>
           <TabsTrigger value="builder">Workflow Builder</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="executions">Executions</TabsTrigger>
@@ -213,6 +218,10 @@ const WorkflowManager: React.FC = () => {
               </Button>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="ai-generator">
+          <WorkflowGenerator />
         </TabsContent>
 
         <TabsContent value="builder">
