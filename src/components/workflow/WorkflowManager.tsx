@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,10 +16,12 @@ import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-ki
 import { SortableItem } from '@/components/ui/sortable-item';
 
 const WorkflowManager: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [executions, setExecutions] = useState<WorkflowExecution[]>([]);
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>(searchParams.get('tab') || 'workflows');
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -143,7 +146,7 @@ const WorkflowManager: React.FC = () => {
         </Button>
       </div>
 
-      <Tabs defaultValue="workflows" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="workflows">My Workflows</TabsTrigger>
           <TabsTrigger value="ai-generator">
@@ -221,7 +224,10 @@ const WorkflowManager: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="ai-generator">
-          <WorkflowGenerator />
+          <WorkflowGenerator onWorkflowSaved={(workflow) => {
+            setWorkflows(prev => [...prev, workflow]);
+            toast.success('Workflow added to your collection');
+          }} />
         </TabsContent>
 
         <TabsContent value="builder">

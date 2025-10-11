@@ -167,9 +167,14 @@ export class WorkflowGeneratorService {
   /**
    * Main method: Generate a complete workflow from a natural language prompt
    */
-  async generateWorkflow(request: WorkflowGenerationRequest): Promise<WorkflowGenerationResult> {
+  async generateWorkflow(
+    request: WorkflowGenerationRequest,
+    retryCount: number = 0
+  ): Promise<WorkflowGenerationResult> {
+    const maxRetries = 2;
+
     try {
-      logger.info('Starting workflow generation', { prompt: request.prompt });
+      logger.info('Starting workflow generation', { prompt: request.prompt, retryCount });
 
       // Stage 1: Classify domain
       const domain = await this.classifyWorkflowDomain(request.prompt);
@@ -179,6 +184,9 @@ export class WorkflowGeneratorService {
 
       // Stage 2: Generate workflow
       const workflow = await this.generateWorkflowJSON(request.prompt, domain, template);
+
+      // Stage 3: Validate workflow structure
+      this.validateWorkflow(workflow);
 
       // Merge with template metadata
       const completeWorkflow = {
@@ -196,9 +204,46 @@ export class WorkflowGeneratorService {
         template,
       };
     } catch (error) {
-      logger.error('Workflow generation failed', { error });
+      logger.error('Workflow generation failed', { error, retryCount });
+
+      // Retry logic with exponential backoff
+      if (retryCount < maxRetries) {
+        logger.info('Retrying workflow generation', { retryCount: retryCount + 1 });
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        return this.generateWorkflow(request, retryCount + 1);
+      }
+
       throw error;
     }
+  }
+
+  /**
+   * Stage 3: Validate the generated workflow structure
+   */
+  private validateWorkflow(workflow: any): void {
+    if (!workflow.nodes || !Array.isArray(workflow.nodes)) {
+      throw new Error('Invalid workflow: missing or invalid nodes array');
+    }
+
+    if (workflow.nodes.length === 0) {
+      throw new Error('Invalid workflow: nodes array is empty');
+    }
+
+    if (!workflow.connections || typeof workflow.connections !== 'object') {
+      throw new Error('Invalid workflow: missing or invalid connections object');
+    }
+
+    // Validate each node has required properties
+    workflow.nodes.forEach((node: any, index: number) => {
+      if (!node.name) {
+        throw new Error(`Invalid node at index ${index}: missing name`);
+      }
+      if (!node.type) {
+        throw new Error(`Invalid node at index ${index}: missing type`);
+      }
+    });
+
+    logger.info('Workflow validation passed', { nodeCount: workflow.nodes.length });
   }
 
   /**

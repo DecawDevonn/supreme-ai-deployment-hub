@@ -69,6 +69,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'Development',
     items: [
+      { title: 'AI Workflow Generator', url: '/workflows?tab=ai-generator', icon: Sparkles },
       { title: 'Workflows', url: '/workflows', icon: Workflow },
       { title: 'Flow Editor', url: '/flow', icon: Code2 },
       { title: 'API Connections', url: '/api', icon: Settings },

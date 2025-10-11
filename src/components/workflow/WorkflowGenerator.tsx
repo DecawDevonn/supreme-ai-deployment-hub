@@ -3,16 +3,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles, Download, Eye, ChevronRight } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Sparkles, Download, Eye, ChevronRight, Save, FileJson, FileCode, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { workflowGeneratorService } from '@/services/workflow/workflowGeneratorService';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import WorkflowVisualization from './WorkflowVisualization';
+import ExampleWorkflows from './ExampleWorkflows';
+import { Workflow } from '@/types/workflow';
+import { n8nService } from '@/services/workflow/n8nService';
+import * as yaml from 'js-yaml';
 
-const WorkflowGenerator: React.FC = () => {
+interface WorkflowGeneratorProps {
+  onWorkflowSaved?: (workflow: Workflow) => void;
+}
+
+const WorkflowGenerator: React.FC<WorkflowGeneratorProps> = ({ onWorkflowSaved }) => {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentStage, setCurrentStage] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
+  const [feedback, setFeedback] = useState<'positive' | 'negative' | null>(null);
 
   const examplePrompts = [
     'Automate lead scoring and email follow-up for sales',
@@ -55,7 +66,7 @@ const WorkflowGenerator: React.FC = () => {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownloadJSON = () => {
     if (!result) return;
 
     const blob = new Blob([JSON.stringify(result.workflow, null, 2)], {
@@ -70,12 +81,91 @@ const WorkflowGenerator: React.FC = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    toast.success('Workflow downloaded');
+    toast.success('Workflow JSON downloaded');
+  };
+
+  const handleDownloadYAML = () => {
+    if (!result) return;
+
+    try {
+      const yamlContent = yaml.dump(result.workflow);
+      const blob = new Blob([yamlContent], { type: 'text/yaml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `workflow-${result.domain}-${Date.now()}.yaml`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success('Workflow YAML downloaded');
+    } catch (error) {
+      logger.error('Failed to convert to YAML', { error });
+      toast.error('Failed to generate YAML');
+    }
+  };
+
+  const handleSaveToWorkflows = async () => {
+    if (!result) return;
+
+    try {
+      const newWorkflow: Workflow = {
+        id: '',
+        name: result.workflow.name || `${result.domain} Workflow`,
+        description: `Generated from: ${prompt.substring(0, 100)}...`,
+        active: false,
+        nodes: result.workflow.nodes || [],
+        connections: result.workflow.connections || [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        category: result.domain as any,
+        tags: [result.domain, 'ai-generated'],
+      };
+
+      const savedWorkflow = await n8nService.createWorkflow(newWorkflow);
+      toast.success('Workflow saved to My Workflows');
+      logger.info('Workflow saved', { workflowId: savedWorkflow.id });
+      
+      if (onWorkflowSaved) {
+        onWorkflowSaved(savedWorkflow);
+      }
+    } catch (error) {
+      logger.error('Failed to save workflow', { error });
+      toast.error('Failed to save workflow');
+    }
+  };
+
+  const handleFeedback = (isPositive: boolean) => {
+    setFeedback(isPositive ? 'positive' : 'negative');
+    toast.success('Thank you for your feedback!');
+    logger.info('User feedback recorded', { 
+      isPositive, 
+      domain: result?.domain,
+      prompt: prompt.substring(0, 100)
+    });
+  };
+
+  const handleSelectExample = (examplePrompt: string) => {
+    setPrompt(examplePrompt);
+    toast.success('Example prompt loaded');
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <Tabs defaultValue="generator" className="space-y-6">
+      <TabsList>
+        <TabsTrigger value="generator">
+          <Sparkles className="h-4 w-4 mr-2" />
+          Generator
+        </TabsTrigger>
+        <TabsTrigger value="examples">
+          <Eye className="h-4 w-4 mr-2" />
+          Examples
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="generator" className="space-y-6">
+        <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -159,7 +249,10 @@ const WorkflowGenerator: React.FC = () => {
       </Card>
 
       {result && (
-        <Card>
+        <>
+          <WorkflowVisualization workflow={result.workflow} />
+          
+          <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -169,9 +262,17 @@ const WorkflowGenerator: React.FC = () => {
                 </CardDescription>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleDownload}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Download JSON
+                <Button size="sm" onClick={handleSaveToWorkflows}>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save to My Workflows
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDownloadJSON}>
+                  <FileJson className="mr-2 h-4 w-4" />
+                  JSON
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDownloadYAML}>
+                  <FileCode className="mr-2 h-4 w-4" />
+                  YAML
                 </Button>
               </div>
             </div>
@@ -202,14 +303,38 @@ const WorkflowGenerator: React.FC = () => {
               </div>
             </div>
 
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+              <div className="space-y-1">
+                <h4 className="text-sm font-medium">Was this workflow helpful?</h4>
+                <p className="text-xs text-muted-foreground">Your feedback helps us improve</p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={feedback === 'positive' ? 'default' : 'outline'}
+                  onClick={() => handleFeedback(true)}
+                  disabled={feedback !== null}
+                >
+                  <ThumbsUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant={feedback === 'negative' ? 'destructive' : 'outline'}
+                  onClick={() => handleFeedback(false)}
+                  disabled={feedback !== null}
+                >
+                  <ThumbsDown className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
             <Card className="bg-primary/5 border-primary/20">
               <CardContent className="pt-6">
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Next Steps</h4>
                   <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                    <li>Download the generated workflow JSON</li>
-                    <li>Open your n8n instance</li>
-                    <li>Import the JSON file into n8n</li>
+                    <li>Click "Save to My Workflows" to add it to your collection</li>
+                    <li>Or download as JSON/YAML to import into n8n</li>
                     <li>Configure any required credentials</li>
                     <li>Test and activate your workflow</li>
                   </ol>
@@ -218,8 +343,14 @@ const WorkflowGenerator: React.FC = () => {
             </Card>
           </CardContent>
         </Card>
+        </>
       )}
-    </div>
+      </TabsContent>
+
+      <TabsContent value="examples">
+        <ExampleWorkflows onSelectExample={handleSelectExample} />
+      </TabsContent>
+    </Tabs>
   );
 };
 
