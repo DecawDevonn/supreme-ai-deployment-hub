@@ -1,0 +1,45 @@
+# Devonn.AI Infrastructure & CI/CD Tracking
+# Auto-monitors pipeline states, branch status, and Terraform updates
+# Created: 2025-10-16
+
+infra_tracking:
+  last_update: "2025-10-16T16:00:00Z"
+  pipelines:
+    chrome_extension:
+      status: disabled
+      note: "Temporarily removed from active CI triggers. Reactivation pending."
+      last_modified_by: "Kwame"
+      branch: "devonn-hybrid-build"
+    infrastructure_ci:
+      status: in_progress
+      note: "Terraform modules updating; AWS EKS cluster provisioning."
+      last_modified_by: "Kwame"
+      branch: "main"
+    hybrid_base_build:
+      status: pending
+      trigger: "Post Terraform apply success"
+      branch: "devonn-hybrid-build"
+    supabase_appsmith_stack:
+      status: pending
+      trigger: "infra-ci successful"
+      branch: "devonn-hybrid-build"
+    ai_runtime_init:
+      status: pending
+      trigger: "backend build complete"
+      branch: "devonn-hybrid-build"
+
+branches:
+  main:
+    status: stable
+    notes: "Hybrid build not merged yet."
+  devonn-hybrid-build:
+    status: active
+    notes: "Contains hybrid web + mobile setup for Devonn.AI."
+  extension_reintegration:
+    status: optional
+    notes: "Future branch for Chrome extension reintegration."
+
+notifications:
+  slack_webhook: ${SLACK_WEBHOOK_URL}
+  notify_on_change: true
+  notify_on_failure: true
