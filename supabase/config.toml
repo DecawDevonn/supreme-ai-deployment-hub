@@ -1,16 +1,16 @@
 project_id = "bqkpxdjmpbucenbppxzc"
 
 [functions.generate-music]
-verify_jwt = false
+verify_jwt = true
 
 [functions.devonn-chat]
-verify_jwt = false
+verify_jwt = true
 
 [functions.persona-management]
 verify_jwt = true
 
 [functions.voice-chat]
-verify_jwt = false
+verify_jwt = true
 
 [functions.dag-builder]
 verify_jwt = true
@@ -28,7 +28,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.classify-workflow-domain]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-workflow-json]
-verify_jwt = false
+verify_jwt = true

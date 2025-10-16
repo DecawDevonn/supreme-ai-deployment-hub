@@ -23,53 +23,8 @@ const STORAGE_KEY = 'devonn_api_configs';
 export const APIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [apiConfigs, setAPIConfigs] = useState<APIConfig[]>([]);
   
-  // Load saved configs from localStorage on initial load
-  useEffect(() => {
-    const loadConfigs = async () => {
-      const savedConfigs = localStorage.getItem(STORAGE_KEY);
-      if (savedConfigs) {
-        try {
-          const parsedConfigs = JSON.parse(savedConfigs) as APIConfig[];
-          
-          // Decrypt any stored API keys (handle async)
-          const decryptedConfigs = await Promise.all(
-            parsedConfigs.map(async (config) => ({
-              ...config,
-              apiKey: config.apiKey ? await decrypt(config.apiKey) : undefined
-            }))
-          );
-          
-          setAPIConfigs(decryptedConfigs);
-        } catch (error) {
-          console.error('Error loading API configurations:', error);
-          toast.error('Failed to load saved API configurations');
-        }
-      }
-    };
-    loadConfigs();
-  }, []);
-  
-  // Save configs to localStorage whenever they change
-  useEffect(() => {
-    const saveConfigs = async () => {
-      if (apiConfigs.length > 0) {
-        try {
-          // Encrypt API keys before storing (handle async)
-          const encryptedConfigs = await Promise.all(
-            apiConfigs.map(async (config) => ({
-              ...config,
-              apiKey: config.apiKey ? await encrypt(config.apiKey) : undefined
-            }))
-          );
-          
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(encryptedConfigs));
-        } catch (error) {
-          console.error('Error saving API configurations:', error);
-        }
-      }
-    };
-    saveConfigs();
-  }, [apiConfigs]);
+  // Note: API configurations are now stored server-side only for security
+  // No localStorage usage to prevent XSS attacks from accessing credentials
   
   const addAPIConfig = (config: NewAPIConfig) => {
     setAPIConfigs(prev => {

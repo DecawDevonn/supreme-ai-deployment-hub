@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { validateString } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,14 +12,19 @@ serve(async (req) => {
   }
 
   try {
-    const { text, action = 'chat' } = await req.json();
+    const body = await req.json();
     
-    if (!text) {
+    // Validate text input
+    const textResult = validateString(body.text, 'text', 1, 10000);
+    if (!textResult.success) {
       return new Response(
-        JSON.stringify({ error: 'Text is required' }),
+        JSON.stringify({ error: textResult.error }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    const text = textResult.data;
+    
+    const action = ['chat', 'voice'].includes(body.action) ? body.action : 'chat';
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { validateString } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,7 +12,34 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, duration, genre, mood, action } = await req.json();
+    const body = await req.json();
+    
+    // Validate prompt
+    const promptResult = validateString(body.prompt, 'prompt', 1, 5000);
+    if (!promptResult.success) {
+      return new Response(
+        JSON.stringify({ error: promptResult.error }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const prompt = promptResult.data;
+    
+    // Validate optional fields
+    const duration = typeof body.duration === 'number' && body.duration > 0 && body.duration <= 600 
+      ? body.duration 
+      : 30;
+    
+    const genre = body.genre && typeof body.genre === 'string' && body.genre.length <= 100 
+      ? body.genre 
+      : undefined;
+    
+    const mood = body.mood && typeof body.mood === 'string' && body.mood.length <= 100 
+      ? body.mood 
+      : undefined;
+    
+    const action = ['generate', 'analyze', 'remix'].includes(body.action) 
+      ? body.action 
+      : 'generate';
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {

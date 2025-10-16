@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { validateString, validateObject } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,7 +12,37 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, domain, template } = await req.json();
+    const body = await req.json();
+    
+    // Validate prompt
+    const promptResult = validateString(body.prompt, 'prompt', 1, 5000);
+    if (!promptResult.success) {
+      return new Response(
+        JSON.stringify({ error: promptResult.error }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const prompt = promptResult.data;
+    
+    // Validate domain
+    const domainResult = validateString(body.domain, 'domain', 1, 100);
+    if (!domainResult.success) {
+      return new Response(
+        JSON.stringify({ error: domainResult.error }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const domain = domainResult.data;
+    
+    // Validate template
+    const templateResult = validateObject(body.template, 'template');
+    if (!templateResult.success) {
+      return new Response(
+        JSON.stringify({ error: templateResult.error }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const template = templateResult.data;
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {

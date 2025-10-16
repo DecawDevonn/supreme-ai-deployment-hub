@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { validateChatMessages, validateUUID, validateString } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,17 +13,30 @@ serve(async (req) => {
   }
 
   try {
-    const { conversationId, messages, action = 'chat', personaId } = await req.json();
+    const body = await req.json();
     
-    if (!conversationId || !messages || !Array.isArray(messages)) {
+    // Validate conversationId
+    const conversationIdResult = validateUUID(body.conversationId, 'conversationId');
+    if (!conversationIdResult.success) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'conversationId and messages array are required' 
-        }),
+        JSON.stringify({ success: false, error: conversationIdResult.error }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    const conversationId = conversationIdResult.data;
+    
+    // Validate messages
+    const messagesResult = validateChatMessages(body.messages);
+    if (!messagesResult.success) {
+      return new Response(
+        JSON.stringify({ success: false, error: messagesResult.error }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const messages = messagesResult.data;
+    
+    const action = body.action || 'chat';
+    const personaId = body.personaId;
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {

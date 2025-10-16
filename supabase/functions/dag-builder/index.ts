@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { validateString, validateWorkflowDefinition, validateUUID } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -31,7 +32,51 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { id, name, description, definition, executor = 'supabase' } = body;
+    
+    // Validate name
+    const nameResult = validateString(body.name, 'name', 1, 255);
+    if (!nameResult.success) {
+      return new Response(
+        JSON.stringify({ error: nameResult.error }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const name = nameResult.data;
+    
+    // Validate description
+    const descriptionResult = validateString(body.description || '', 'description', 0, 1000);
+    if (!descriptionResult.success) {
+      return new Response(
+        JSON.stringify({ error: descriptionResult.error }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const description = descriptionResult.data;
+    
+    // Validate definition
+    const definitionResult = validateWorkflowDefinition(body.definition);
+    if (!definitionResult.success) {
+      return new Response(
+        JSON.stringify({ error: definitionResult.error }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const definition = definitionResult.data;
+    
+    const executor = ['supabase', 'n8n', 'zapier'].includes(body.executor) ? body.executor : 'supabase';
+    
+    // Validate ID if provided
+    let id = body.id;
+    if (id) {
+      const idResult = validateUUID(id, 'id');
+      if (!idResult.success) {
+        return new Response(
+          JSON.stringify({ error: idResult.error }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      id = idResult.data;
+    }
 
     console.log('DAG Builder request:', { id, name, user_id: user.id });
 
