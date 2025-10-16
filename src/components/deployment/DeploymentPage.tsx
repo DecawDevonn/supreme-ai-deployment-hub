@@ -9,6 +9,7 @@ import DeploymentStepsOverview from '@/components/deployment/DeploymentStepsOver
 import DeploymentActions from '@/components/deployment/DeploymentActions';
 import DeploymentSummary from '@/components/deployment/DeploymentSummary';
 import SpeechControl from '@/components/deployment/controls/SpeechControl';
+import InfrastructureTracking from '@/components/deployment/InfrastructureTracking';
 import { DeploymentProvider } from '@/contexts/DeploymentContext';
 import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
@@ -51,6 +52,14 @@ const DeploymentPage: React.FC = () => {
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
                 <DeploymentActions />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.25 }}
+              >
+                <InfrastructureTracking />
               </motion.div>
               
               {showVoiceControl && (
