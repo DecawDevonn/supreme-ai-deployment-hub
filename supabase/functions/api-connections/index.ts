@@ -84,9 +84,9 @@ serve(async (req) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Database error:', error);
+        console.error('[INTERNAL] Database error:', error);
         return new Response(
-          JSON.stringify({ error: error.message }),
+          JSON.stringify({ error: 'Failed to fetch connections' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -205,9 +205,9 @@ serve(async (req) => {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Database error:', error);
+        console.error('[INTERNAL] Database error:', error);
         return new Response(
-          JSON.stringify({ error: error.message }),
+          JSON.stringify({ error: 'Failed to delete connection' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -274,8 +274,9 @@ serve(async (req) => {
         .eq('id', connectionId);
 
       if (updateError) {
+        console.error('[INTERNAL] Update error:', updateError);
         return new Response(
-          JSON.stringify({ error: updateError.message }),
+          JSON.stringify({ error: 'Failed to validate connection' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }

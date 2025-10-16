@@ -44,15 +44,14 @@ export const handleApiError = (
   
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError;
-    const errorDetails = {
+    // Only log safe information, not full response data
+    const safeErrorInfo = {
       message: axiosError.message,
       status: axiosError.response?.status,
-      data: axiosError.response?.data,
-      url: axiosError.config?.url
     };
 
-    // Log error with appropriate level
-    console[logLevel](`${customMessage}:`, errorDetails);
+    // Log error with appropriate level - avoid exposing sensitive data
+    console[logLevel](`${customMessage}:`, safeErrorInfo);
     
     // Rethrow if requested
     if (rethrow) {
@@ -62,8 +61,8 @@ export const handleApiError = (
     return null;
   }
   
-  // Handle non-Axios errors
-  console[logLevel](`${customMessage} (Non-Axios error):`, error);
+  // Handle non-Axios errors - avoid logging full error details
+  console[logLevel](`${customMessage}`);
   
   if (rethrow) {
     throw error;

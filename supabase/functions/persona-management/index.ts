@@ -1,10 +1,25 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation schema
+const personaSchema = z.object({
+  id: z.string().min(1).max(100).optional(),
+  persona_id: z.string().min(1).max(100).optional(),
+  name: z.string().min(1).max(255),
+  role: z.string().min(1).max(255),
+  archetype: z.string().max(100).optional(),
+  identity: z.record(z.unknown()).optional(),
+  traits: z.record(z.unknown()).optional(),
+  skills: z.record(z.unknown()).optional(),
+  boundaries: z.record(z.unknown()).optional(),
+  memory_hooks: z.record(z.unknown()).optional(),
+});
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -77,8 +92,11 @@ serve(async (req) => {
             .single();
 
           if (error) {
-            console.error('[persona-management] Error fetching persona:', error);
-            throw error;
+            console.error('[INTERNAL] Error fetching persona:', error);
+            return new Response(JSON.stringify({ error: 'Failed to fetch persona' }), {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
           }
 
           return new Response(JSON.stringify(data), {
@@ -91,8 +109,11 @@ serve(async (req) => {
             .order('created_at', { ascending: false });
 
           if (error) {
-            console.error('[persona-management] Error fetching personas:', error);
-            throw error;
+            console.error('[INTERNAL] Error fetching personas:', error);
+            return new Response(JSON.stringify({ error: 'Failed to fetch personas' }), {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
           }
 
           return new Response(JSON.stringify(data || []), {
@@ -103,28 +124,34 @@ serve(async (req) => {
       case 'POST':
         // Create a new persona
         const createBody = await req.json();
-        console.log('[persona-management] Creating persona:', createBody);
+        
+        // Validate input
+        const validatedCreate = personaSchema.parse(createBody);
+        console.log('[persona-management] Creating persona');
 
         const { data: createData, error: createError } = await supabaseClient
           .from('personas')
           .insert({
-            persona_id: createBody.id,
-            name: createBody.name,
-            role: createBody.role,
-            archetype: createBody.archetype,
-            identity: createBody.identity || {},
-            traits: createBody.traits || {},
-            skills: createBody.skills || {},
-            boundaries: createBody.boundaries || {},
-            memory_hooks: createBody.memory_hooks || {},
+            persona_id: validatedCreate.id || validatedCreate.persona_id,
+            name: validatedCreate.name,
+            role: validatedCreate.role,
+            archetype: validatedCreate.archetype,
+            identity: validatedCreate.identity || {},
+            traits: validatedCreate.traits || {},
+            skills: validatedCreate.skills || {},
+            boundaries: validatedCreate.boundaries || {},
+            memory_hooks: validatedCreate.memory_hooks || {},
             raw_schema: createBody,
           })
           .select()
           .single();
 
         if (createError) {
-          console.error('[persona-management] Error creating persona:', createError);
-          throw createError;
+          console.error('[INTERNAL] Error creating persona:', createError);
+          return new Response(JSON.stringify({ error: 'Failed to create persona' }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
 
         return new Response(JSON.stringify(createData), {
@@ -135,23 +162,29 @@ serve(async (req) => {
       case 'PUT':
         // Update an existing persona
         if (!personaId) {
-          throw new Error('persona_id is required for updates');
+          return new Response(JSON.stringify({ error: 'persona_id is required' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
 
         const updateBody = await req.json();
-        console.log('[persona-management] Updating persona:', personaId, updateBody);
+        
+        // Validate input (partial update)
+        const validatedUpdate = personaSchema.partial().parse(updateBody);
+        console.log('[persona-management] Updating persona');
 
         const { data: updateData, error: updateError } = await supabaseClient
           .from('personas')
           .update({
-            name: updateBody.name,
-            role: updateBody.role,
-            archetype: updateBody.archetype,
-            identity: updateBody.identity,
-            traits: updateBody.traits,
-            skills: updateBody.skills,
-            boundaries: updateBody.boundaries,
-            memory_hooks: updateBody.memory_hooks,
+            ...(validatedUpdate.name && { name: validatedUpdate.name }),
+            ...(validatedUpdate.role && { role: validatedUpdate.role }),
+            ...(validatedUpdate.archetype && { archetype: validatedUpdate.archetype }),
+            ...(validatedUpdate.identity && { identity: validatedUpdate.identity }),
+            ...(validatedUpdate.traits && { traits: validatedUpdate.traits }),
+            ...(validatedUpdate.skills && { skills: validatedUpdate.skills }),
+            ...(validatedUpdate.boundaries && { boundaries: validatedUpdate.boundaries }),
+            ...(validatedUpdate.memory_hooks && { memory_hooks: validatedUpdate.memory_hooks }),
             raw_schema: updateBody,
           })
           .eq('persona_id', personaId)
@@ -159,8 +192,11 @@ serve(async (req) => {
           .single();
 
         if (updateError) {
-          console.error('[persona-management] Error updating persona:', updateError);
-          throw updateError;
+          console.error('[INTERNAL] Error updating persona:', updateError);
+          return new Response(JSON.stringify({ error: 'Failed to update persona' }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
 
         return new Response(JSON.stringify(updateData), {
@@ -170,7 +206,10 @@ serve(async (req) => {
       case 'DELETE':
         // Delete a persona
         if (!personaId) {
-          throw new Error('persona_id is required for deletion');
+          return new Response(JSON.stringify({ error: 'persona_id is required' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
 
         console.log('[persona-management] Deleting persona:', personaId);
@@ -181,8 +220,11 @@ serve(async (req) => {
           .eq('persona_id', personaId);
 
         if (deleteError) {
-          console.error('[persona-management] Error deleting persona:', deleteError);
-          throw deleteError;
+          console.error('[INTERNAL] Error deleting persona:', deleteError);
+          return new Response(JSON.stringify({ error: 'Failed to delete persona' }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
 
         return new Response(JSON.stringify({ success: true }), {
@@ -196,8 +238,20 @@ serve(async (req) => {
         });
     }
   } catch (error) {
-    console.error('[persona-management] Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('[INTERNAL] Error:', error);
+    
+    // Handle validation errors specifically
+    if (error instanceof z.ZodError) {
+      return new Response(JSON.stringify({ 
+        error: 'Invalid input data',
+        details: error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    return new Response(JSON.stringify({ error: 'An error occurred' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
