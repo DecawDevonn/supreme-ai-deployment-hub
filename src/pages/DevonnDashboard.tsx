@@ -36,13 +36,13 @@ const DevonnDashboard = () => {
         </SectionHeading>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-6 w-full max-w-5xl mx-auto">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="builder">Agent Builder</TabsTrigger>
-            <TabsTrigger value="yaml">OpenManus Editor</TabsTrigger>
-            <TabsTrigger value="skills">Skill Parser</TabsTrigger>
-            <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
-            <TabsTrigger value="chat">Chat</TabsTrigger>
+          <TabsList className="inline-flex w-full max-w-5xl mx-auto overflow-x-auto md:grid md:grid-cols-6 gap-1 p-1">
+            <TabsTrigger value="dashboard" className="whitespace-nowrap flex-shrink-0">Dashboard</TabsTrigger>
+            <TabsTrigger value="builder" className="whitespace-nowrap flex-shrink-0">Agent Builder</TabsTrigger>
+            <TabsTrigger value="yaml" className="whitespace-nowrap flex-shrink-0">OpenManus Editor</TabsTrigger>
+            <TabsTrigger value="skills" className="whitespace-nowrap flex-shrink-0">Skill Parser</TabsTrigger>
+            <TabsTrigger value="marketplace" className="whitespace-nowrap flex-shrink-0">Marketplace</TabsTrigger>
+            <TabsTrigger value="chat" className="whitespace-nowrap flex-shrink-0">Chat</TabsTrigger>
           </TabsList>
           
           <TabsContent value="dashboard" className="mt-6">
