@@ -9,7 +9,7 @@ const DevonnTV = () => {
   return (
     <div className="min-h-screen bg-background">
       <DevonnTVHero />
-      <Container>
+      <Container className="space-y-8">
         <CategoriesSection />
         <RecommendedSection />
         <LiveEventsSection />
