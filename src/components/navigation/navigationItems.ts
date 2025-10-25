@@ -2,6 +2,8 @@
 export const navigationItems = [
   { name: 'Home', path: '/' },
   { name: 'Documentation', path: '/documentation' },
+  { name: 'Resources', path: '/resources' },
+  { name: 'Showcase', path: '/showcase' },
   { name: 'Cookbook', path: '/cookbook' },
   { name: 'Deployment', path: '/deployment' },
   { name: 'Sandbox', path: '/sandbox' },

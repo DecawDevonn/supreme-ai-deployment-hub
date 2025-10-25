@@ -33,6 +33,8 @@ import VideoDetail from "./pages/VideoDetail";
 import CourseDetail from "./pages/CourseDetail";
 import UserDashboard from "./pages/UserDashboard";
 import Sandbox from "./pages/Sandbox";
+import Resources from "./pages/Resources";
+import Showcase from "./pages/Showcase";
 import LegacyDashboard from "./pages/LegacyDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import { Toaster } from "./components/ui/sonner";
@@ -69,6 +71,8 @@ function App() {
                               <Route path="/deployment" element={<DeploymentDashboard />} />
                               <Route path="/api" element={<ApiConnections />} />
                               <Route path="/documentation" element={<Documentation />} />
+                              <Route path="/resources" element={<Resources />} />
+                              <Route path="/showcase" element={<Showcase />} />
                               <Route path="/agents" element={<AgentDashboard />} />
                               <Route path="/devonn" element={<DevonnDashboard />} />
                               <Route path="/flow" element={<FlowEditor />} />

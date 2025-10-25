@@ -3,33 +3,25 @@ import React, { useEffect } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import Footer from '@/components/Footer';
 import { toast } from 'sonner';
-import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Import all the component sections
+// Import components
 import HeroSection from '@/components/index/HeroSection';
 import DashboardPreview from '@/components/index/DashboardPreview';
-import GettingStartedSteps from '@/components/index/GettingStartedSteps';
-import KeyComponents from '@/components/index/KeyComponents';
-import LatestUpdates from '@/components/index/LatestUpdates';
-import ArchitectureDiagram from '@/components/index/ArchitectureDiagram';
-import CaseStudies from '@/components/index/CaseStudies';
+import GettingStartedAndComponents from '@/components/index/GettingStartedAndComponents';
 import FAQSection from '@/components/index/FAQSection';
-import IntegrationPartners from '@/components/index/IntegrationPartners';
-import Testimonials from '@/components/index/Testimonials';
 import ManifestSection from '@/components/index/ManifestSection';
 import CTASection from '@/components/index/CTASection';
-// New components
 import AIFeatureShowcase from '@/components/index/AIFeatureShowcase';
 import AIVisualization from '@/components/index/AIVisualization';
 import VoiceEnabledAI from '@/components/index/VoiceEnabledAI';
 import MultiCloudDeployment from '@/components/index/MultiCloudDeployment';
 import PricingSection from '@/components/index/PricingSection';
+import InteractiveFlowCallout from '@/components/index/InteractiveFlowCallout';
+import SectionNavigation from '@/components/index/SectionNavigation';
 
 const Index = () => {
   const { scrollYProgress } = useScroll();
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
@@ -37,12 +29,16 @@ const Index = () => {
   });
 
   useEffect(() => {
-    // Show welcome toast with improved message
-    toast('Welcome to DEVONN.AI', {
-      description: 'Explore our voice-enabled AI deployment framework with multi-cloud capabilities',
-      position: 'bottom-right',
-      duration: 5000,
-    });
+    // Show welcome toast only on first visit
+    const hasVisited = localStorage.getItem('devonn-visited');
+    if (!hasVisited) {
+      toast('Welcome to DEVONN.AI', {
+        description: 'Explore our voice-enabled AI deployment framework with multi-cloud capabilities',
+        position: 'bottom-right',
+        duration: 5000,
+      });
+      localStorage.setItem('devonn-visited', 'true');
+    }
 
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
@@ -69,50 +65,109 @@ const Index = () => {
         style={{ scaleX }}
       />
       
-      <HeroSection />
-      <AIVisualization />
-      <VoiceEnabledAI />
-      <DashboardPreview />
-      <MultiCloudDeployment />
-      <GettingStartedSteps />
-      <KeyComponents />
-      <AIFeatureShowcase />
-      <PricingSection />
-      <LatestUpdates />
-      <ArchitectureDiagram />
-      <CaseStudies />
-      <IntegrationPartners />
-      <Testimonials />
-      <FAQSection />
-      <ManifestSection />
-      
-      {/* New Flow Editor Callout */}
-      <div className="py-12 bg-muted/50">
-        <div className="container mx-auto px-4">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="max-w-3xl mx-auto text-center"
-          >
-            <h2 className="text-3xl font-bold mb-6">Interactive Flow Editor</h2>
-            <p className="text-lg mb-8">
-              Design complex workflows visually with our powerful PocketFlow editor, based on ReactFlow technology.
-            </p>
-            <Link to="/flow">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-3 bg-primary text-white rounded-lg shadow-lg hover:bg-primary/90 transition-colors"
-              >
-                Try Flow Editor
-              </motion.button>
-            </Link>
-          </motion.div>
-        </div>
+      <div id="hero">
+        <HeroSection />
       </div>
       
+      <motion.div
+        id="ai-viz"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8 }}
+      >
+        <AIVisualization />
+      </motion.div>
+      
+      <motion.div
+        id="voice"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8 }}
+      >
+        <VoiceEnabledAI />
+      </motion.div>
+      
+      <motion.div
+        id="dashboard"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8 }}
+      >
+        <DashboardPreview />
+      </motion.div>
+      
+      <motion.div
+        id="cloud"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8 }}
+      >
+        <MultiCloudDeployment />
+      </motion.div>
+      
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8 }}
+      >
+        <GettingStartedAndComponents />
+      </motion.div>
+      
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8 }}
+      >
+        <AIFeatureShowcase />
+      </motion.div>
+      
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8 }}
+      >
+        <InteractiveFlowCallout />
+      </motion.div>
+      
+      <motion.div
+        id="pricing"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8 }}
+      >
+        <PricingSection />
+      </motion.div>
+      
+      <motion.div
+        id="faq"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8 }}
+      >
+        <FAQSection />
+      </motion.div>
+      
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8 }}
+      >
+        <ManifestSection />
+      </motion.div>
+      
       <CTASection />
+      
+      <SectionNavigation />
       
       <Footer />
       
