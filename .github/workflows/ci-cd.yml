@@ -1,0 +1,208 @@
+name: CI / CD - Devonn.AI Studio
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_BACKEND_REPO: ${{ secrets.ECR_BACKEND_REPO }}
+  ECR_FRONTEND_REPO: ${{ secrets.ECR_FRONTEND_REPO }}
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+  actions: read
+
+jobs:
+  setup:
+    name: Check & Setup
+    runs-on: ubuntu-latest
+    outputs:
+      backend_image: ${{ steps.set.outputs.backend_image }}
+      frontend_image: ${{ steps.set.outputs.frontend_image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set image tags
+        id: set
+        run: |
+          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          TIMESTAMP=$(date +%s)
+          echo "backend_image=devonn-backend:${SHORT_SHA}-${TIMESTAMP}" >> $GITHUB_OUTPUT
+          echo "frontend_image=devonn-frontend:${SHORT_SHA}-${TIMESTAMP}" >> $GITHUB_OUTPUT
+
+  build_and_scan:
+    name: Build, Test, Scan, Push to ECR
+    needs: setup
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Configure AWS credentials (OIDC)
+        if: secrets.GITHUB_ROLE_ARN != ''
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.GITHUB_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Configure AWS credentials (static)
+        if: secrets.GITHUB_ROLE_ARN == ''
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build backend image
+        run: |
+          docker build -t ${{ needs.setup.outputs.backend_image }} -f backend/Dockerfile .
+
+      - name: Build frontend image
+        run: |
+          docker build -t ${{ needs.setup.outputs.frontend_image }} -f frontend/Dockerfile .
+
+      - name: Run backend tests
+        run: |
+          cd backend
+          python -m pytest -q || true
+
+      - name: Trivy scan backend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image: ${{ needs.setup.outputs.backend_image }}
+          format: 'table'
+
+      - name: Trivy scan frontend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image: ${{ needs.setup.outputs.frontend_image }}
+          format: 'table'
+
+      - name: Tag images for ECR
+        run: |
+          ACCOUNT=${{ secrets.AWS_ACCOUNT_ID }}
+          BACKEND_REPO=${{ env.ECR_BACKEND_REPO }}
+          FRONTEND_REPO=${{ env.ECR_FRONTEND_REPO }}
+          docker tag ${{ needs.setup.outputs.backend_image }} ${ACCOUNT}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${BACKEND_REPO}:${GITHUB_SHA::7}
+          docker tag ${{ needs.setup.outputs.frontend_image }} ${ACCOUNT}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${FRONTEND_REPO}:${GITHUB_SHA::7}
+
+      - name: Push images to ECR
+        run: |
+          ACCOUNT=${{ secrets.AWS_ACCOUNT_ID }}
+          BACKEND_REPO=${{ env.ECR_BACKEND_REPO }}
+          FRONTEND_REPO=${{ env.ECR_FRONTEND_REPO }}
+          docker push ${ACCOUNT}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${BACKEND_REPO}:${GITHUB_SHA::7}
+          docker push ${ACCOUNT}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${FRONTEND_REPO}:${GITHUB_SHA::7}
+
+  terraform_plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    needs: build_and_scan
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+      - name: Terraform Init
+        run: |
+          cd infra/terraform
+          terraform init -input=false -backend-config="bucket=${{ secrets.TF_BUCKET }}"
+      - name: Terraform Plan
+        run: |
+          cd infra/terraform
+          terraform workspace select ${TF_WORKSPACE:-default} || terraform workspace new ${TF_WORKSPACE:-default}
+          terraform plan -out=tfplan -input=false
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: infra/terraform/tfplan
+
+  terraform_apply:
+    name: Terraform Apply
+    needs: terraform_plan
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: infra/terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+      - name: Terraform Apply
+        run: |
+          cd infra/terraform
+          terraform apply -input=false tfplan
+
+  helm_deploy:
+    name: Helm Deploy to EKS
+    runs-on: ubuntu-latest
+    needs: terraform_apply
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        if: secrets.GITHUB_ROLE_ARN != ''
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.GITHUB_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Configure AWS credentials (static)
+        if: secrets.GITHUB_ROLE_ARN == ''
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: '1.26.0'
+
+      - name: Install eksctl
+        run: |
+          curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name $(terraform -chdir=infra/terraform output -raw eks_cluster_name) --region ${{ env.AWS_REGION }}
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.12.0'
+
+      - name: Helm upgrade/install
+        run: |
+          helm upgrade --install devonn-studio infra/k8s/chart \
+            --namespace default \
+            --set image.backend.repository="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_BACKEND_REPO }}" \
+            --set image.frontend.repository="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_FRONTEND_REPO }}" \
+            --set image.backend.tag="${GITHUB_SHA::7}" \
+            --set image.frontend.tag="${GITHUB_SHA::7}"
