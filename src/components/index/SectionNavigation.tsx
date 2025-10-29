@@ -27,7 +27,7 @@ const SectionNavigation = () => {
   useEffect(() => {
     const handleScroll = () => {
       // Show nav after scrolling past hero
-      setIsVisible(window.scrollY > 500);
+      setIsVisible(window.scrollY > 100);
 
       // Update active section
       const scrollPosition = window.scrollY + 100;
