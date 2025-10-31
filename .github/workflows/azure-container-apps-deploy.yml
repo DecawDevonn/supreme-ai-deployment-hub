@@ -42,36 +42,47 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   AZURE_RESOURCE_GROUP: devonn-${{ github.event.inputs.environment || 'development' }}-rg
-  CONTAINER_APP_NAME: devonn-api
+  CONTAINER_APP_NAME: devonn-ai
   CONTAINER_ENV_NAME: devonn-${{ github.event.inputs.environment || 'development' }}-env
+  AZURE_RESOURCE_GROUP_TFSTATE: devonn-tfstate-rg
 
 jobs:
   build-and-push:
-    name: Build and Push Container
+    name: Build and Push Backend + Frontend
     runs-on: ubuntu-latest
     outputs:
-      image_tag: ${{ steps.image_tag.outputs.tag }}
+      backend_tag: ${{ steps.backend_tag.outputs.tag }}
+      frontend_tag: ${{ steps.frontend_tag.outputs.tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-        
-      - name: Generate image tag
-        id: image_tag
+
+      
+      - name: Generate backend tag
+        id: backend_tag
         run: |
-          # Use short commit SHA for tag
-          TAG="sha-$(echo ${{ github.sha }} | cut -c1-7)"
-          # Use branch name for PR
+          TAG="backend-sha-$(echo ${{ github.sha }} | cut -c1-7)"
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             TAG="pr-${{ github.event.pull_request.number }}-$TAG"
-          fi
-          # Use environment name for manual trigger
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             TAG="${{ github.event.inputs.environment || 'dev' }}-$TAG"
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Generate frontend tag
+        id: frontend_tag
+        run: |
+          TAG="frontend-sha-$(echo ${{ github.sha }} | cut -c1-7)"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            TAG="pr-${{ github.event.pull_request.number }}-$TAG"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TAG="${{ github.event.inputs.environment || 'dev' }}-$TAG"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -79,17 +90,32 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Build and push Docker image
+
+      # ---------- Build Backend ----------
+      - name: Build and push backend image
         uses: docker/build-push-action@v4
         with:
           context: .
+          file: ./Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.image_tag.outputs.tag }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.backend_tag.outputs.tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:backend-latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:backend-buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:backend-buildcache,mode=max
+
+      # ---------- Build Frontend ----------
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.frontend_tag.outputs.tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:frontend-latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:frontend-buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:frontend-buildcache,mode=max
 
   terraform-deploy:
     name: Deploy with Terraform
@@ -112,64 +138,142 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          
+
       - name: Terraform Init
         working-directory: ./src/data/manifest/terraform/azure
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET_VALUE }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
           terraform init \
-            -backend-config="resource_group_name=${{ env.AZURE_RESOURCE_GROUP }}" \
+            -backend-config="resource_group_name=${{ env.AZURE_RESOURCE_GROUP_TFSTATE }}" \
             -backend-config="storage_account_name=${{ secrets.AZURE_STORAGE_ACCOUNT }}" \
             -backend-config="container_name=tfstate" \
             -backend-config="key=${{ github.event.inputs.environment || 'development' }}.terraform.tfstate"
 
       - name: Terraform Plan
         working-directory: ./src/data/manifest/terraform/azure
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET_VALUE }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
           terraform plan \
             -var="resource_group_name=${{ env.AZURE_RESOURCE_GROUP }}" \
             -var="location=${{ github.event.inputs.deploy_region || 'eastus' }}" \
             -var="container_app_environment_name=${{ env.CONTAINER_ENV_NAME }}" \
             -var="container_app_name=${{ env.CONTAINER_APP_NAME }}" \
-            -var="image_name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image_tag }}" \
+            -var="backend_image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.backend_tag }}" \
+            -var="frontend_image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.frontend_tag }}" \
             -var="environment=${{ github.event.inputs.environment || 'development' }}" \
             -out=tfplan
             
       - name: Terraform Apply
         if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/azure-deploy'
         working-directory: ./src/data/manifest/terraform/azure
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET_VALUE }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: terraform apply -auto-approve tfplan
         
-      - name: Get Container App URL
+      - name: Get Container App URLs
         if: success() && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/azure-deploy')
         working-directory: ./src/data/manifest/terraform/azure
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET_VALUE }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
-          FQDN=$(terraform output -raw container_app_url)
-          echo "Container App URL: $FQDN"
-          echo "CONTAINER_APP_URL=$FQDN" >> $GITHUB_ENV
+          # Extracting Backend and Frontend URLs, cleaning up unwanted characters
+          # BACKEND_FQDN=$(terraform output -raw backend_url | grep -o 'https://[^ ]*' | head -n 1)
+          # FRONTEND_FQDN=$(terraform output -raw frontend_url | grep -o 'https://[^ ]*' | head -n 1)
+          BACKEND_FQDN=$(terraform output -raw backend_url | tr -d '"' | sed -E 's/--[0-9]+\././' | sed 's/::.*//' | xargs)
+          FRONTEND_FQDN=$(terraform output -raw frontend_url | tr -d '"' | sed -E 's/--[0-9]+\././' | sed 's/::.*//' | xargs)
+
+          echo "Backend URL: $BACKEND_FQDN"
+          echo "Frontend URL: $FRONTEND_FQDN"
+
+          echo "BACKEND_URL=$BACKEND_FQDN" >> $GITHUB_ENV
+          echo "FRONTEND_URL=$FRONTEND_FQDN" >> $GITHUB_ENV
           
-      - name: Verify Deployment
+      - name: Verify Backend Deployment
         if: success() && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/azure-deploy')
         run: |
-          echo "Verifying deployment at $CONTAINER_APP_URL"
+          # $BACKEND_URL is now clean, so we can use it directly
+          CLEAN_BACKEND_URL=$(echo "$BACKEND_URL" | sed -E 's/.*(https?:\/\/[^ ]*).*/\1/' | xargs) 
+
+          # Sanity check: verify the cleaned URL is correct before proceeding.
+          if [[ "$CLEAN_BACKEND_URL" =~ ^https?://[^[:space:]]+$ ]]; then
+            echo "✅ Clean URL successfully extracted: $CLEAN_BACKEND_URL"
+          else
+            echo "❌ Error: Could not extract a valid URL. Raw variable content: $BACKEND_URL"
+            exit 1
+          fi
+          
+          echo "Verifying backend deployment at $CLEAN_BACKEND_URL/health"
+          
+          # ... (rest of your retry logic remains the same)
           
           max_retries=5
           counter=0
           
           while [ $counter -lt $max_retries ]
           do
-            status_code=$(curl -s -o /dev/null -w "%{http_code}" $CONTAINER_APP_URL/health || echo "failed")
+            # Note: Use double quotes around the variable to protect the URL
+            status_code=$(curl -s -o /dev/null -w "%{http_code}" "$CLEAN_BACKEND_URL/health" || echo "failed")
             
             if [[ "$status_code" == "200" ]]; then
-              echo "✅ Deployment verified successfully!"
+              echo "✅ Backend deployment verified successfully!"
               exit 0
             else
-              echo "⏳ Waiting for deployment to be ready... (Attempt $counter of $max_retries)"
+              echo "⏳ Waiting for backend to be ready... (Attempt $counter of $max_retries)"
               sleep 10
               counter=$((counter + 1))
             fi
           done
           
-          echo "❌ Failed to verify deployment after $max_retries attempts"
+          echo "❌ Failed to verify backend after $max_retries attempts"
+          exit 1
+
+      - name: Verify Frontend Deployment
+        if: success() && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/azure-deploy')
+        run: |
+          CLEAN_FRONTEND_URL=$(echo "$FRONTEND_URL" | sed -E 's/.*(https?:\/\/[^ ]*).*/\1/' | xargs)
+          
+          # Sanity check: verify the cleaned URL is correct.
+          if [[ "$CLEAN_FRONTEND_URL" =~ ^https?://[^[:space:]]+$ ]]; then
+            echo "✅ Clean URL successfully extracted: $CLEAN_FRONTEND_URL"
+          else
+            echo "❌ Error: Could not extract a valid URL. Raw variable content: $FRONTEND_URL"
+            exit 1
+          fi
+
+          echo "Verifying frontend deployment at $CLEAN_FRONTEND_URL"
+          
+          max_retries=5
+          counter=0
+          
+          while [ $counter -lt $max_retries ]
+          do
+            status_code=$(curl -s -o /dev/null -w "%{http_code}" "$CLEAN_FRONTEND_URL" || echo "failed")
+            
+            if [[ "$status_code" == "200" ]]; then
+              echo "✅ Frontend deployment verified successfully!"
+              exit 0
+            else
+              echo "⏳ Waiting for frontend to be ready... (Attempt $counter of $max_retries)"
+              sleep 10
+              counter=$((counter + 1))
+            fi
+          done
+          
+          echo "❌ Failed to verify frontend after $max_retries attempts"
           exit 1
 
   notify:

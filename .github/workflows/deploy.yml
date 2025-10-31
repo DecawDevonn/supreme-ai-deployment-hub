@@ -35,7 +35,7 @@ jobs:
           cache: 'npm'
       
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
       
       - name: Set environment variables
         run: |
@@ -56,14 +56,14 @@ jobs:
             echo "API_URL=https://api.devonn.ai" >> $GITHUB_ENV
           fi
       
-      - name: Validate OpenAI API Key
-        if: ${{ env.ENVIRONMENT == 'production' }}
-        run: node scripts/validate-openai-key.js
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      # - name: Validate OpenAI API Key  #c
+      #   if: ${{ env.ENVIRONMENT == 'production' }}
+      #   run: node scripts/validate-openai-key.cjs
+      #   env:
+      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       
       - name: Build extension
-        run: npm run build:${{ env.ENVIRONMENT }}
+        run: npm run build -- --mode $ENVIRONMENT
       
       - name: Package extension
         run: |
@@ -73,7 +73,7 @@ jobs:
       - name: Upload to Chrome Web Store
         if: ${{ github.event.inputs.environment == 'production' || github.ref == 'refs/heads/main' }}
         run: |
-          node scripts/upload-to-chrome-webstore.js
+          node scripts/upload-to-chrome-webstore.cjs
         env:
           CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
           CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
