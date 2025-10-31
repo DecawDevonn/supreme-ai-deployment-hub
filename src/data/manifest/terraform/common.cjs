@@ -63,19 +63,21 @@ export const commonConfigYaml = `# --- Common Terraform Configuration ---
 # --------------------------------------------
 
 # Recommended: Use S3 backend for team collaboration
-# terraform {
-#   backend "s3" {
-#     bucket = "devonn-terraform-state"
-#     key    = "terraform.tfstate"
-#     region = "us-west-2"
-#     dynamodb_table = "terraform-locks"
-#     encrypt = true
-#   }
-# }
+terraform {
+  backend "s3" {
+    bucket = "devonn-terraform-state"
+    key    = "terraform.tfstate"
+    region = "us-west-2"
+    dynamodb_table = "terraform-locks"
+    encrypt = true
+  }
+}
 
 # Define the AWS provider and region
 provider "aws" {
   region = var.aws_region
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
   default_tags {
     tags = {
       Project     = "DevonnAI"
@@ -84,4 +86,47 @@ provider "aws" {
       Owner       = "DevOps"
     }
   }
-}`;
+}
+  
+provider "aws" {
+  alias  = "dr_region"
+  region = var.dr_region
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
+  default_tags {
+    tags = {
+      Project     = "DevonnAI"
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+      Owner       = "DevOps"
+    }
+  }
+}
+
+# Add this after your AWS providers
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.cluster.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args = [
+      "eks",
+      "get-token",
+      "--cluster-name",
+      data.aws_eks_cluster.cluster.name
+    ]
+  }
+}
+
+data "aws_eks_cluster" "cluster" {
+  region = "us-west-2"
+  name   = module.eks.cluster_name
+}
+data "aws_eks_cluster_auth" "cluster" {
+  region = "us-west-2"
+  name   = module.eks.cluster_name
+}
+
+`;

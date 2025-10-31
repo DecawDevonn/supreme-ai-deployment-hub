@@ -1,5 +1,6 @@
-
+# ----------------------------------------------------
 # Azure Container Apps Terraform Configuration
+# ----------------------------------------------------
 
 terraform {
   required_providers {
@@ -15,10 +16,16 @@ terraform {
 }
 
 provider "azurerm" {
-  features {}
+  features {    
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+}
 }
 
+# ----------------------------------------------------
 # Resource Group
+# ----------------------------------------------------
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
   location = var.location
@@ -30,7 +37,9 @@ resource "azurerm_resource_group" "rg" {
   }
 }
 
-# Log Analytics Workspace for Container Apps
+# ----------------------------------------------------
+# Log Analytics Workspace
+# ----------------------------------------------------
 resource "azurerm_log_analytics_workspace" "workspace" {
   name                = "devonn-${var.environment}-logs"
   resource_group_name = azurerm_resource_group.rg.name
@@ -44,7 +53,9 @@ resource "azurerm_log_analytics_workspace" "workspace" {
   }
 }
 
+# ----------------------------------------------------
 # Container Apps Environment
+# ----------------------------------------------------
 resource "azurerm_container_app_environment" "env" {
   name                       = var.container_app_environment_name
   resource_group_name        = azurerm_resource_group.rg.name
@@ -57,35 +68,37 @@ resource "azurerm_container_app_environment" "env" {
   }
 }
 
-# Container App
-resource "azurerm_container_app" "app" {
-  name                         = var.container_app_name
+# ----------------------------------------------------
+# Backend Container App (API)
+# ----------------------------------------------------
+resource "azurerm_container_app" "backend" {
+  name                         = "${var.container_app_name}-backend"
   resource_group_name          = azurerm_resource_group.rg.name
   container_app_environment_id = azurerm_container_app_environment.env.id
   revision_mode                = "Single"
 
   template {
     container {
-      name   = "api"
-      image  = var.image_name
+      name   = "backend"
+      image  = var.backend_image
       cpu    = "0.5"
       memory = "1Gi"
-      
+
       env {
         name  = "ENVIRONMENT"
         value = var.environment
       }
-      
+
       env {
         name  = "LOG_LEVEL"
-        value = var.environment == "production" ? "INFO" : "DEBUG"
+        value = var.environment == "prod" ? "INFO" : "DEBUG"
       }
     }
 
     min_replicas = 1
     max_replicas = 10
   }
-  
+
   ingress {
     external_enabled = true
     target_port      = 8000
@@ -101,7 +114,45 @@ resource "azurerm_container_app" "app" {
   }
 }
 
-# Application Insights for monitoring
+# ----------------------------------------------------
+# Frontend Container App (UI)
+# ----------------------------------------------------
+resource "azurerm_container_app" "frontend" {
+  name                         = "${var.container_app_name}-frontend"
+  resource_group_name          = azurerm_resource_group.rg.name
+  container_app_environment_id = azurerm_container_app_environment.env.id
+  revision_mode                = "Single"
+
+  template {
+    container {
+      name   = "frontend"
+      image  = var.frontend_image
+      cpu    = "0.25"
+      memory = "0.5Gi"
+    }
+
+    min_replicas = 1
+    max_replicas = 5
+  }
+
+  ingress {
+    external_enabled = true
+    target_port      = 80
+    traffic_weight {
+      latest_revision = true
+      percentage      = 100
+    }
+  }
+
+  tags = {
+    Environment = var.environment
+    Terraform   = "true"
+  }
+}
+
+# ----------------------------------------------------
+# Application Insights
+# ----------------------------------------------------
 resource "azurerm_application_insights" "insights" {
   name                = "devonn-${var.environment}-insights"
   location            = azurerm_resource_group.rg.location

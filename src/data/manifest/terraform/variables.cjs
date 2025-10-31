@@ -9,10 +9,34 @@ variable "aws_region" {
   default     = "us-west-2"
 }
 
+variable "aws_access_key" {
+  description = "AWS access key"
+  type        = string
+  sensitive   = true
+}
+
+variable "aws_secret_key" {
+  description = "AWS secret key"
+  type        = string
+  sensitive   = true
+}
+
+variable "dr_region" {
+  description = "Disaster recovery region"
+  type        = string
+  default     = "us-east-1"
+}
+
 variable "environment" {
   description = "Environment name (dev, staging, production)"
   type        = string
   default     = "prod"
+}
+
+variable "admin_cidr" {
+  description = "CIDR block for admin access to EKS API (e.g., CI/CD pipeline or admin IPs)"
+  type        = string
+  default     = "0.0.0.0/0"  
 }
 
 variable "vpc_cidr" {
@@ -24,7 +48,7 @@ variable "vpc_cidr" {
 variable "availability_zones" {
   description = "List of availability zones to use"
   type        = list(string)
-  default     = ["us-west-2a", "us-west-2b"]
+  default     = ["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"]
 }
 
 variable "private_subnet_cidrs" {
@@ -60,7 +84,7 @@ variable "node_min_capacity" {
 variable "node_instance_types" {
   description = "EC2 instance types for worker nodes"
   type        = list(string)
-  default     = ["t3.medium"]
+  default     = ["t3.small"]
 }
 
 variable "node_disk_size" {
@@ -91,4 +115,76 @@ variable "db_password" {
   description = "Password for the RDS database"
   type        = string
   sensitive   = true
-}`;
+}
+
+# Declare use_snapshot variable
+variable "use_snapshot" {
+  description = "Flag to indicate whether to use a snapshot."
+  type        = bool
+  default     = false  
+}
+
+# Declare snapshot_identifier variable
+variable "snapshot_identifier" {
+  description = "The snapshot identifier to use if use_snapshot is true."
+  type        = string
+  default     = ""  
+}
+
+variable "db_replica_instance_class" {
+  description = "RDS instance class for read replicas"
+  type        = string
+  default     = "db.t3.micro"
+}
+
+variable "enable_cross_region_replica" {
+  description = "Enable cross-region RDS read replica"
+  type        = bool
+  default     = false
+}
+
+variable "db_dr_instance_class" {
+  description = "RDS instance class for cross-region disaster recovery replicas"
+  type        = string
+  default     = "db.t3.micro"
+}
+
+variable "family" {
+  description = "The engine family for the DB parameter group (e.g., postgres14, mysql8.0)"
+  type        = string
+  default     = "postgres14"
+}
+
+variable "create" {
+  type    = bool
+  default = true 
+}
+
+variable "kubernetes_version" {
+  type    = string
+  default = null
+}
+
+variable "enable_guardduty" {
+  type    = bool
+  default = false
+}
+
+variable "enable_securityhub" {
+  type    = bool
+  default = false
+}
+
+// variable "AWS_ENVOY_CRT" {
+//   description = "The certificate for Envoy"
+//   type        = string
+// }
+
+// variable "AWS_ENVOY_KEY" {
+//   description = "The key for Envoy"
+//   type        = string
+// }
+
+`;
+
+

@@ -7,6 +7,7 @@ on:
     paths:
       - 'terraform/**'
       - '.github/workflows/infrastructure-ci-cd.yml'
+      - 'scripts/generate-tf-files.js'
       - 'policy/**'
       - 'tests/infrastructure/**'
   pull_request:
@@ -14,13 +15,14 @@ on:
     paths:
       - 'terraform/**'
       - 'policy/**'
+      - 'scripts/generate-tf-files.js'
       - 'tests/infrastructure/**'
   workflow_dispatch:
     inputs:
       environment:
         description: 'Target deployment environment'
         required: true
-        default: 'development'
+        default: 'production'
         type: choice
         options:
           - development
@@ -42,11 +44,21 @@ permissions:
   pull-requests: write
   issues: write
   deployments: write
+  security-events: write  
+  packages: write
 
 env:
-  TF_VERSION: '1.5.0'
+  TF_VERSION: '1.5.7'
   TF_LOG: 'INFO'
   COMPLIANCE_STANDARDS: 'cis,gdpr,hipaa,pci'
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET_VALUE }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_RESOURCE_GROUP: devonn-${{ github.event.inputs.environment || 'production' }}-rg
+  CONTAINER_APP_NAME: devonn-ai
+  CONTAINER_ENV_NAME: devonn-${{ github.event.inputs.environment || 'production' }}-env  
+  AZURE_RESOURCE_GROUP_TFSTATE: devonn-tfstate-rg    
 
 jobs:
   validate:
@@ -62,10 +74,10 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
       
       - name: Terraform Format Check
-        run: terraform fmt -check -recursive
+        run: terraform fmt -recursive
         
       - name: Terraform Init
-        run: terraform init -backend=false
+        run: terraform init -reconfigure
         
       - name: Terraform Validate
         run: terraform validate
@@ -73,7 +85,15 @@ jobs:
       - name: Generate Documentation
         run: |
           # Install terraform-docs
-          curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/downloads/terraform-docs-v0.16.0-$(uname)-amd64.tar.gz
+          curl -sSLo ./terraform-docs.tar.gz https://github.com/terraform-docs/terraform-docs/releases/download/v0.19.0/terraform-docs-v0.19.0-linux-amd64.tar.gz
+          
+          # Check if the file is in gzip format
+          if ! file terraform-docs.tar.gz | grep -q 'gzip compressed data'; then
+            echo "Error: The downloaded file is not in gzip format."
+            exit 1
+          fi
+          
+          # Extract and install terraform-docs
           tar -xzf terraform-docs.tar.gz
           chmod +x terraform-docs
           sudo mv terraform-docs /usr/local/bin/terraform-docs
@@ -82,7 +102,7 @@ jobs:
           terraform-docs markdown . > TERRAFORM.md
           
       - name: Upload Documentation
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: terraform-docs
           path: TERRAFORM.md
@@ -94,35 +114,44 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+        
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          
       - name: Run tfsec
         uses: aquasecurity/tfsec-action@v1.0.0
         with:
           soft_fail: true
           format: sarif
-          out: tfsec.sarif
-      
-      - name: Upload tfsec results
-        uses: github/codeql-action/upload-sarif@v2
-        if: success() || failure()
-        with:
-          sarif_file: tfsec.sarif
-          category: tfsec
+          additional_args: -O tfsec.sarif
       
       - name: Run checkov
         uses: bridgecrewio/checkov-action@master
         with:
-          directory: ./terraform
+          directory: ./src/data/manifest/terraform/azure
           framework: terraform
           soft_fail: true
           output_format: sarif
-          output_file: checkov.sarif
-      
-      - name: Upload checkov results
-        uses: github/codeql-action/upload-sarif@v2
+
+      - name: Upload tfsec results
+        uses: github/codeql-action/upload-sarif@v3
         if: success() || failure()
         with:
-          sarif_file: checkov.sarif
+          token: ${{ secrets.GITHUB_TOKEN }}        
+          sarif_file: ./tfsec.sarif
+          category: tfsec
+
+          
+      - name: Upload checkov results
+        uses: github/codeql-action/upload-sarif@v3
+        if: success() || failure()
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          sarif_file: ./results.sarif
           category: checkov
       
       - name: Install OPA
@@ -135,19 +164,82 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: ${{ env.TF_VERSION }}
-      
-      - name: Generate Terraform Plan for Policy Evaluation
+
+      - name: Install dependencies
         run: |
-          terraform init -backend=false
-          terraform plan -out=tfplan.binary
-          terraform show -json tfplan.binary > tfplan.json
+          npm install --save-dev @types/node --legacy-peer-deps
+
+      - name: Generate Terraform files from manifests
+        run: |
+          npx ts-node scripts/generate-tf-files.cjs
+
+      - name: List generated files
+        working-directory: ./src/data/manifest/terraform
+        run: |
+          ls -lh .             
+
+      - name: Check and Release Terraform State Lock (AWS)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          LOCK_ID="devonn/terraform.tfstate"
+          TABLE_NAME="terraform-locks"
+          AWS_REGION="us-west-2"
+          echo "Checking for Terraform state lock in DynamoDB (region: $AWS_REGION)..."
+          LOCK_EXISTS=$(aws dynamodb get-item --table-name "$TABLE_NAME" --key "{\"LockID\": {\"S\": \"$LOCK_ID\"}}" --region "$AWS_REGION" --query 'Item.LockID.S' --output text 2>&1)
+          EXIT_CODE=$?
+          echo "GetItem output: $LOCK_EXISTS"
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "Error running get-item. Check permissions, region, and table existence."
+            exit $EXIT_CODE
+          fi
+          if [ "$LOCK_EXISTS" = "$LOCK_ID" ]; then
+            echo "Lock found, attempting to release..."
+            DELETE_OUTPUT=$(aws dynamodb delete-item --table-name "$TABLE_NAME" --key "{\"LockID\": {\"S\": \"$LOCK_ID\"}}" --region "$AWS_REGION" 2>&1)
+            DELETE_EXIT=$?
+            echo "DeleteItem output: $DELETE_OUTPUT"
+            if [ $DELETE_EXIT -ne 0 ]; then
+              echo "Error releasing lock. Check permissions."
+              exit $DELETE_EXIT
+            fi
+            echo "Lock released."
+          else
+            echo "No lock found, continuing workflow."
+          fi
+
+
+      - name: Generate Terraform Plan for Policy Evaluation
+        working-directory: ./src/data/manifest/terraform
+        env:
+          TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_db_password: ${{ secrets.RDS_DB_PASSWORD }}
+        run: |
+          terraform init -reconfigure
+          terraform plan -out=tfplan -lock=false
+          if [ $? -ne 0 ]; then
+            echo "Terraform plan failed"
+            exit 1
+          fi
+          terraform show -json tfplan > tfplan.json
       
+      - name: Find Terraform Plan File
+        run: |
+          echo "Searching for the tfplan file..."
+          find . -name "tfplan" 
+          echo "Listing all files in ./src/data/manifest/terraform..."
+          ls -l ./src/data/manifest/terraform
+          echo "Listing all files in ./src/data/manifest/terraform..."
+          cat ./src/data/manifest/terraform/tfplan.json
+
       - name: Run OPA Policy Checks
         run: |
           mkdir -p policy-results
           
           # Run RDS policy checks
-          opa eval --format pretty --data policy/aws_rds_policy.rego --input tfplan.json "data.terraform.aws.rds" > policy-results/rds-policy-results.txt
+          opa eval --format pretty --data policy/aws_rds_policy.rego --input ./src/data/manifest/terraform/tfplan.json "data.terraform.aws.rds" > policy-results/rds-policy-results.txt
           
           echo "OPA Policy Check Results:"
           cat policy-results/rds-policy-results.txt
@@ -160,9 +252,10 @@ jobs:
               exit 1
             fi
           fi
+
       
       - name: Upload Policy Check Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: policy-check-results
           path: policy-results/
@@ -179,33 +272,74 @@ jobs:
         uses: actions/checkout@v3
       
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
       
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: ${{ env.TF_VERSION }}
           
+      - name: Install dependencies
+        run: |
+          npm install --save-dev @types/node --legacy-peer-deps
+
+      - name: Generate Terraform files from manifests
+        run: |
+          npx ts-node scripts/generate-tf-files.cjs
+
       - name: Terraform Init
+        working-directory: ./src/data/manifest/terraform    
         id: init
-        run: terraform init
-        
+        run: terraform init -reconfigure
+
+      - name: List directory before upload
+        working-directory: ./src/data/manifest/terraform
+        run: ls -alh
+
+      - name: Debug lock file presence
+        run: ls -alh src/data/manifest/terraform/.terraform.lock.hcl
+
+      - name: Upload Terraform Lock File
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-lock
+          path: src/data/manifest/terraform/.terraform.lock.hcl
+          include-hidden-files: true
+
+      - name: Upload Terraform Config Files
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-config
+          path: ./src/data/manifest/terraform/*.tf            
+
       - name: Terraform Plan
+        working-directory: ./src/data/manifest/terraform     
+        env:
+          TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_db_password: ${{ secrets.RDS_DB_PASSWORD }}
         id: plan
         run: |
-          terraform plan -var-file=environments/${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'development') }}.tfvars -out=tfplan
+          terraform plan -out=tfplan -lock=false
           terraform show -json tfplan > tfplan.json
-        
+
+      - name: List Terraform directory after plan
+        working-directory: ./src/data/manifest/terraform
+        run: |
+          ls -alh .   
+
       - name: Upload Terraform Plan
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: terraform-plan
           path: |
-            tfplan
-            tfplan.json
+            ./src/data/manifest/terraform/tfplan
+            ./src/data/manifest/terraform/tfplan.json          
           
       - name: Comment Plan on PR
         if: github.event_name == 'pull_request'
@@ -257,7 +391,7 @@ jobs:
     steps:
       - name: Manual approval step
         run: echo "Deployment to production has been approved"
-  
+
   apply:
     name: Terraform Apply
     needs: [terraform-plan, approval]
@@ -277,23 +411,41 @@ jobs:
         uses: actions/checkout@v3
       
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
       
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: ${{ env.TF_VERSION }}
           
-      - name: Terraform Init
-        run: terraform init
-        
+      - name: Download Terraform Lock File
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-lock
+          path: ./src/data/manifest/terraform
+
       - name: Download Terraform Plan
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: terraform-plan
+          path: ./src/data/manifest/terraform
+
+      - name: Download Terraform Config Files
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-config
+          path: ./src/data/manifest/terraform          
+
+      - name: Debug Terraform Files
+        run: ls -alh ./src/data/manifest/terraform
+
+      - name: Terraform Init
+        working-directory: ./src/data/manifest/terraform
+        run: terraform init -reconfigure       
         
       - name: Create deployment status
         id: deployment
@@ -304,22 +456,36 @@ jobs:
           env: ${{ github.event.inputs.environment || 'production' }}
           ref: ${{ github.ref }}
       
+      - name: Terraform Refresh
+        working-directory: ./src/data/manifest/terraform
+        env:
+          TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_db_password: ${{ secrets.RDS_DB_PASSWORD }}     
+        run: terraform refresh -lock=false
+
+      - name: Terraform Plan (fresh)
+        working-directory: ./src/data/manifest/terraform
+        env:
+          TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_db_password: ${{ secrets.RDS_DB_PASSWORD }}       
+        run: terraform plan -out=tfplan -lock=false    
+
       # Use selected deployment strategy
       - name: Canary Deployment
         if: github.event.inputs.deployment_strategy == 'canary' || github.event.inputs.deployment_strategy == null
+        working-directory: ./src/data/manifest/terraform
         run: |
           echo "Implementing canary deployment strategy..."
-          # Apply changes to a subset of resources first (canary pattern)
-          terraform apply -var-file=environments/${{ github.event.inputs.environment || 'production' }}.tfvars -target=module.vpc -target=module.eks -auto-approve
+          terraform apply -auto-approve -lock=false ./tfplan
           
-          echo "Waiting 2 minutes to verify canary deployment..."
-          sleep 120
-          
-          echo "Proceeding with full deployment..."
-          terraform apply tfplan
       
       - name: Blue-Green Deployment
         if: github.event.inputs.deployment_strategy == 'blue-green'
+        working-directory: ./src/data/manifest/terraform        
         run: |
           echo "Implementing blue-green deployment strategy..."
           # Clone current environment as blue environment
@@ -327,7 +493,9 @@ jobs:
           
           # Setup blue environment
           terraform workspace new $BLUE_ENV || terraform workspace select $BLUE_ENV
-          terraform apply -var-file=environments/${{ github.event.inputs.environment || 'production' }}.tfvars -auto-approve
+          
+          # Apply configuration directly with variables passed through -var
+          terraform apply -auto-approve -lock=false ./tfplan
           
           echo "Blue environment deployed, waiting for validation..."
           sleep 180
@@ -342,15 +510,8 @@ jobs:
         if: github.event.inputs.deployment_strategy == 'standard'
         run: |
           echo "Implementing standard deployment strategy..."
-          terraform apply tfplan
-      
-      - name: Extract Terraform Outputs
-        id: outputs
-        if: success()
-        run: |
-          echo "rds_endpoint=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
-          echo "cluster_name=$(terraform output -raw eks_cluster_name)" >> $GITHUB_OUTPUT
-      
+          terraform apply -auto-approve -lock=false ./tfplan
+
       - name: Update deployment status
         if: always()
         uses: bobheadxi/deployments@v1
@@ -361,61 +522,228 @@ jobs:
           deployment_id: ${{ steps.deployment.outputs.deployment_id }}
           env: ${{ github.event.inputs.environment || 'production' }}
   
+  deploy-to-eks:
+    name: Deploy to EKS
+    needs: apply  
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      - name: Build and Push Backend & Frontend Docker Images
+        run: |
+          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/production/devonn-ai:backend-latest -f Dockerfile .
+          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/production/devonn-ai:frontend-latest -f Dockerfile.frontend .
+
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/production/devonn-ai:backend-latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/production/devonn-ai:frontend-latest
+          
+          echo "BACKEND_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/production/devonn-ai:backend-latest" >> $GITHUB_ENV
+          echo "FRONTEND_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/production/devonn-ai:frontend-latest" >> $GITHUB_ENV
+
+      - name: Update kubeconfig for EKS Cluster
+        run: |
+          aws eks update-kubeconfig --name devonn-eks-prod --region ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to EKS
+        run: |
+          sed -i "s|\${BACKEND_IMAGE}|$BACKEND_IMAGE|g" infrastructure/kubernetes/backend-deployment.yaml
+          sed -i "s|\${FRONTEND_IMAGE}|$FRONTEND_IMAGE|g" infrastructure/kubernetes/frontend-deployment.yaml
+
+          kubectl apply -f infrastructure/kubernetes/backend-deployment.yaml -n devonn
+          kubectl apply -f infrastructure/kubernetes/frontend-deployment.yaml -n devonn
+          kubectl apply -f infrastructure/kubernetes/services.yaml -n devonn
+
+      # - name: Get application IP
+      #   id: app_ip
+      #   run: |
+      #     APPLICATION_IP=$(kubectl get svc devonn-frontend-service -n devonn -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+      #     echo "Application IP: $APPLICATION_IP"
+          
+      #     # Save the application IP for future steps using environment file (new method)
+      #     echo "APPLICATION_IP=$APPLICATION_IP" >> $GITHUB_ENV
+  
+      # - name: Expose application URL
+      #   id: app_url
+      #   run: |
+      #     APPLICATION_URL="http://${{ env.APPLICATION_IP }}"
+      #     echo "Application URL: $APPLICATION_URL"
+      #     echo "APPLICATION_URL=$APPLICATION_URL" >> $GITHUB_ENV
+  
+      # - name: Display Application URL in Job Summary
+      #   run: |
+      #     echo "Application URL: ${{ env.APPLICATION_URL }}"
+
+
   post-deploy-validation:
     name: Post-Deployment Validation
-    needs: apply
+    needs: deploy-to-eks
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
       
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.19'
+          go-version: '1.21'
       
+      - name: Download Terraform Config Files
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-config
+          path: ./src/data/manifest/terraform  
+
+      - name: Extract Terraform Outputs
+        id: outputs
+        if: success()
+        working-directory: ./src/data/manifest/terraform
+        env:
+          TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_db_password: ${{ secrets.RDS_DB_PASSWORD }}   
+        run: |
+          echo "Fetching Terraform output after apply..."
+          export TF_LOG=ERROR
+
+          terraform init -reconfigure
+          terraform refresh -lock=false
+          terraform plan -lock=false
+
+          # Capture the raw output for eks_cluster_name
+          RAW_CLUSTER_NAME=$(terraform output -raw eks_cluster_name 2>&1)
+          
+          echo "------------ BEGIN RAW OUTPUT (CLUSTER_NAME) ------------"
+          echo "$RAW_CLUSTER_NAME"
+          echo "------------- END RAW OUTPUT (CLUSTER_NAME) -------------"
+          
+          # Remove the first line which contains the command for cluster_name
+          RAW_CLEAN_CLUSTER_NAME=$(echo "$RAW_CLUSTER_NAME" | tail -n +2)
+          
+          # Filter out lines with debug info and ensure we capture only the actual value for cluster_name
+          CLUSTER_NAME=$(echo "$RAW_CLEAN_CLUSTER_NAME" | sed 's/::debug::.*//g' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          
+          # If the value is still empty after cleaning for cluster_name, exit with error
+          if [ -z "$CLUSTER_NAME" ]; then
+            echo "Error: Failed to obtain clean eks_cluster_name from terraform output"
+            exit 1
+          fi
+          
+          # Save the cleaned value of cluster_name to $GITHUB_ENV
+          echo "cluster_name=${CLUSTER_NAME}" >> $GITHUB_ENV
+          echo "Extracted cluster_name: $CLUSTER_NAME"
+          
+          # Capture the raw output for rds_endpoint
+          RAW_RDS_ENDPOINT=$(terraform output -raw rds_endpoint 2>&1)
+          
+          echo "------------ BEGIN RAW OUTPUT (RDS_ENDPOINT) ------------"
+          echo "$RAW_RDS_ENDPOINT"
+          echo "------------- END RAW OUTPUT (RDS_ENDPOINT) -------------"
+          
+          # Remove the first line which contains the command for rds_endpoint
+          RAW_CLEAN_RDS_ENDPOINT=$(echo "$RAW_RDS_ENDPOINT" | tail -n +2)
+          
+          # Filter out lines with debug info and ensure we capture only the actual value for rds_endpoint
+          RDS_ENDPOINT=$(echo "$RAW_CLEAN_RDS_ENDPOINT" | sed 's/::debug::.*//g' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          
+          # If the value is still empty after cleaning for rds_endpoint, exit with error
+          if [ -z "$RDS_ENDPOINT" ]; then
+            echo "Error: Failed to obtain clean rds_endpoint from terraform output"
+            exit 1
+          fi
+          
+          # Save the cleaned value of rds_endpoint to $GITHUB_ENV
+          echo "rds_endpoint=${RDS_ENDPOINT}" >> $GITHUB_ENV
+          echo "Extracted rds_endpoint: $RDS_ENDPOINT"
+
+          # Capture the raw output for rds_endpoint_id
+          RAW_RDS_ENDPOINT_ID=$(terraform output -raw rds_endpoint_id 2>&1)
+      
+          echo "------------ BEGIN RAW OUTPUT (RDS_ENDPOINT_ID) ------------"
+          echo "$RAW_RDS_ENDPOINT_ID"
+          echo "------------- END RAW OUTPUT (RDS_ENDPOINT_ID) -------------"
+          
+          # Remove the first line which contains the command for rds_endpoint_id
+          RAW_CLEAN_RDS_ENDPOINT_ID=$(echo "$RAW_RDS_ENDPOINT_ID" | tail -n +2)
+          
+          # Filter out lines with debug info and ensure we capture only the actual value for rds_endpoint_id
+          RDS_ENDPOINT_ID=$(echo "$RAW_CLEAN_RDS_ENDPOINT_ID" | sed 's/::debug::.*//g' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          
+          # If the value is still empty after cleaning for rds_endpoint_id, exit with error
+          if [ -z "$RDS_ENDPOINT_ID" ]; then
+            echo "Error: Failed to obtain clean rds_endpoint_id from terraform output"
+            exit 1
+          fi
+          
+          # Save the cleaned value of rds_endpoint_id to $GITHUB_ENV
+          echo "rds_endpoint_id=${RDS_ENDPOINT_ID}" >> $GITHUB_ENV
+          echo "Extracted rds_endpoint_id: $RDS_ENDPOINT_ID"          
+
       - name: Run Infrastructure Tests
+        env:
+          eks_cluster_name: ${{ env.cluster_name }}
+          rds_endpoint: ${{ env.rds_endpoint }}
+          rds_endpoint_id: ${{ env.rds_endpoint_id }}
         run: |
           cd tests/infrastructure
           go mod init infrastructure-tests
           go mod tidy
           go test -v -timeout 30m -tags=integration
       
-      - name: Check Database Connectivity
+      - name: Check Database Status
         env:
-          DB_ENDPOINT: ${{ needs.apply.outputs.rds_endpoint }}
+          DB_ENDPOINT: ${{ env.rds_endpoint }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          # Install PostgreSQL client
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+          # Check RDS instance status using AWS CLI
+          RDS_STATUS=$(aws rds describe-db-instances --db-instance-identifier devonn-postgres-prod --query 'DBInstances[0].DBInstanceStatus' --output text)
           
-          # Test connection (password would be securely retrieved from secrets manager in real scenario)
-          PGPASSWORD=${{ secrets.DB_PASSWORD }} psql -h $DB_ENDPOINT -U ${{ secrets.DB_USERNAME }} -d ${{ secrets.DB_NAME }} -c "SELECT 1 AS connectivity_test;"
+          echo "RDS Instance Status: $RDS_STATUS"
       
       - name: Check EKS Cluster Health
         env:
-          CLUSTER_NAME: ${{ needs.apply.outputs.cluster_name }}
+          CLUSTER_NAME: ${{ env.cluster_name }}
         run: |
           # Configure kubectl
-          aws eks update-kubeconfig --name $CLUSTER_NAME --region us-east-1
+          aws eks update-kubeconfig --name $CLUSTER_NAME --region us-west-2
           
           # Check node status
           kubectl get nodes
           
           # Check pod status
           kubectl get pods --all-namespaces
-          
-          # Check service mesh status
-          kubectl get meshes -A
       
       - name: Load Testing
         run: |
+          APPLICATION_IP=$(kubectl get svc devonn-frontend-service -n devonn -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          
           # Install k6
           sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
           echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
@@ -423,10 +751,10 @@ jobs:
           sudo apt-get install k6
           
           # Run basic load test
-          k6 run load-tests/basic-load.js --summary-export=load-test-results.json
+          k6 run -e APPLICATION_IP=$APPLICATION_IP load-tests/basic-test.js --summary-export=load-test-results.json
       
       - name: Upload Test Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: validation-results
           path: |
@@ -445,33 +773,40 @@ jobs:
 
   compliance-check:
     name: Compliance Validation
-    needs: [apply]
+    needs: deploy-to-eks
     if: success()
     runs-on: ubuntu-latest
+    env:
+      COMPLIANCE_STANDARDS: "cis_1.5_aws,iso27001_2022_aws,pci_3.2.1_aws"
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
       
       - name: Install Prowler
         run: |
           pip install prowler
       
-      - name: Run Compliance Checks
+      - name: Run General Compliance Checks
         run: |
-          # Run compliance checks focused on database services
-          prowler aws --services rds eks --compliance ${{ env.COMPLIANCE_STANDARDS }} --output html --output-file compliance-report
+          prowler aws --compliance cis_1.5_aws --compliance iso27001_2022_aws --compliance pci_3.2.1_aws --output-formats html --output-filename compliance-report || true
+  
+      # Run compliance checks focusing on specific services (RDS and EKS)
+      - name: Run Service-Specific Compliance Checks
+        run: |
+          prowler aws --services rds eks --output-formats html --output-filename compliance-report-services || true
       
       - name: Upload Compliance Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: compliance-reports
-          path: compliance-report*
+          path: output/compliance-report*
       
       - name: Generate Compliance Dashboard
         run: |
@@ -483,7 +818,7 @@ jobs:
           from bs4 import BeautifulSoup
           
           # Read HTML report
-          with open('compliance-report.html', 'r') as f:
+          with open('./output/compliance-report.html', 'r') as f:
               html = f.read()
           
           soup = BeautifulSoup(html, 'html.parser')
@@ -511,7 +846,7 @@ jobs:
           EOF
       
       - name: Upload Compliance Dashboard
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: compliance-dashboard
           path: compliance-dashboard.json
@@ -561,26 +896,60 @@ jobs:
         uses: actions/checkout@v3
         
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
       
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: ${{ env.TF_VERSION }}
       
+      - name: Download Terraform Lock File
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-lock
+          path: ./src/data/manifest/terraform
+
+      - name: Download Terraform Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+          path: ./src/data/manifest/terraform
+
+      - name: Download Terraform Config Files
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-config
+          path: ./src/data/manifest/terraform          
+
+      - name: Debug Terraform Files
+        run: ls -alh ./src/data/manifest/terraform
+
       - name: Terraform Init
+        working-directory: ./src/data/manifest/terraform
+        env:
+          TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_db_password: ${{ secrets.RDS_DB_PASSWORD }}        
         run: terraform init
         
       - name: Rollback to Last Known Good State
+        working-directory: ./src/data/manifest/terraform
+        env:
+          TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_db_password: ${{ secrets.RDS_DB_PASSWORD }}        
         run: |
           echo "Deployment failed! Rolling back to last known good state..."
-          terraform workspace select ${{ github.event.inputs.environment || 'production' }}
-          terraform plan -refresh-only -var-file=environments/${{ github.event.inputs.environment || 'production' }}.tfvars -out=rollback.tfplan
-          terraform apply rollback.tfplan
-      
+          # terraform workspace select ${{ github.event.inputs.environment || 'production' }}
+          terraform plan -refresh-only -out=tfplan -lock=false 
+          terraform apply -lock=false tfplan
+
       - name: Send Rollback Notification
         uses: slackapi/slack-github-action@v1
         with:

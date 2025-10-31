@@ -22,8 +22,21 @@ on:
         type: boolean
 
 env:
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET_VALUE }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   TF_VERSION: '1.5.0'
   TF_LOG: INFO
+  AZURE_RESOURCE_GROUP: devonn-${{ github.event.inputs.environment || 'production' }}-rg
+  CONTAINER_APP_NAME: devonn-ai
+  CONTAINER_ENV_NAME: devonn-${{ github.event.inputs.environment || 'production' }}-env  
+  AZURE_RESOURCE_GROUP_TFSTATE: devonn-tfstate-rg  
+
+permissions:
+  id-token: write
+  contents: read
+  packages: write
 
 jobs:
   terraform-plan:
@@ -51,13 +64,9 @@ jobs:
       - name: Configure Azure Credentials
         uses: azure/login@v1
         with:
-          creds: |
-            {
-              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
-              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
-            }
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v2
@@ -65,34 +74,91 @@ jobs:
           credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
       - name: Terraform Init
-        run: terraform init
-        working-directory: ./terraform
+        working-directory: ./src/data/manifest/terraform/azure
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET_VALUE }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ env.AZURE_RESOURCE_GROUP_TFSTATE }}" \
+            -backend-config="storage_account_name=${{ secrets.AZURE_STORAGE_ACCOUNT }}" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=${{ github.event.inputs.environment || 'production' }}.terraform.tfstate"  
+
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+      
+      - name: Check Lease on Terraform State and Break if Exists
+        env:
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
+        run: |
+          # Set default environment if not provided
+          ENVIRONMENT=${{ github.event.inputs.environment || 'production' }}
+      
+          # Check the environment and handle lease breaking for staging or production
+          LEASE_BREAK_OUTPUT=$(az storage blob lease break --blob-name "${ENVIRONMENT}.terraform.tfstate" \
+            --container-name tfstate \
+            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
+            --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
+            --output tsv --only-show-errors || true)  
+      
+          # Check if the output contains an error related to the lease not being present
+          if [[ "$LEASE_BREAK_OUTPUT" == *"LeaseNotPresentWithLeaseOperation"* ]]; then
+            echo "No lease found, skipping lease break."
+          elif [[ "$LEASE_BREAK_OUTPUT" == *"Lease broken"* ]]; then
+            echo "Lease found and broken."
+          else
+            echo "Unknown error: $LEASE_BREAK_OUTPUT"
+          fi
 
       - name: Terraform Validate
+        working-directory: ./src/data/manifest/terraform/azure
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET_VALUE }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}      
         run: terraform validate
-        working-directory: ./terraform
+
+      - name: Clean up old plan
+        run: |
+          rm -f ./tfplan
 
       - name: Terraform Plan
+        working-directory: ./src/data/manifest/terraform/azure
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET_VALUE }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}      
         id: tf-plan
         run: |
-          export exitcode=0
-          terraform plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
-          
-          echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
-          
-          if [ $exitcode -eq 1 ]; then
-            echo Terraform Plan Failed!
-            exit 1
-          else 
-            exit 0
-          fi
-        working-directory: ./terraform
+          terraform plan \
+            -var="resource_group_name=${{ env.AZURE_RESOURCE_GROUP }}" \
+            -var="location=${{ github.event.inputs.deploy_region || 'eastus' }}" \
+            -var="container_app_environment_name=${{ env.CONTAINER_ENV_NAME }}" \
+            -var="container_app_name=${{ env.CONTAINER_APP_NAME }}" \
+            -var="backend_image=ghcr.io/rajeshannam20/devon.ai-supreme-repo:backend-latest" \
+            -var="frontend_image=ghcr.io/rajeshannam20/devon.ai-supreme-repo:frontend-latest" \
+            -var="environment=${{ github.event.inputs.environment || 'production' }}" \
+            -out=tfplan
+
+      - name: Find Terraform Plan File
+        run: |
+          echo "Searching for the tfplan file..."
+          find . -name "tfplan" 
+          echo "Listing all files in ./src/data/manifest/terraform/azure..."
+          ls -l ./src/data/manifest/terraform/azure
 
       - name: Publish Terraform Plan
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: terraform/tfplan
+          path: ./
 
       - name: Create String Output
         id: tf-plan-string
@@ -109,14 +175,13 @@ jobs:
           echo '```' >> $GITHUB_OUTPUT
           echo "</details>" >> $GITHUB_OUTPUT
           echo "${delimiter}" >> $GITHUB_OUTPUT
-        working-directory: ./terraform
+        working-directory: ./src/data/manifest/terraform/azure
 
       - name: Publish Terraform Plan to Task Summary
         env:
           SUMMARY: ${{ steps.tf-plan-string.outputs.summary }}
         run: |
           echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
-
       - name: Comment PR
         uses: actions/github-script@v7
         if: github.event_name == 'pull_request'
@@ -153,14 +218,13 @@ jobs:
                 body: output
               })
             }
-
   terraform-apply:
     name: Terraform Apply
-    if: github.ref == 'refs/heads/main' && needs.terraform-plan.outputs.tfplanExitCode == 2
+    if: needs.terraform-plan.result == 'success'
     runs-on: ubuntu-latest
     environment: 
-      name: ${{ github.event.inputs.environment || 'production' }}
-      url: https://${{ github.event.inputs.environment || 'prod' }}.devonn.ai
+      name: ${{ github.event.inputs.environment != '' && github.event.inputs.environment || 'production' }}
+      # url: https://${{ github.event.inputs.environment != '' && github.event.inputs.environment || 'prod' }}.devonn.ai
     needs: [terraform-plan]
     
     steps:
@@ -182,13 +246,9 @@ jobs:
       - name: Configure Azure Credentials
         uses: azure/login@v1
         with:
-          creds: |
-            {
-              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
-              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
-            }
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v2
@@ -196,24 +256,52 @@ jobs:
           credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
       - name: Terraform Init
-        run: terraform init
-        working-directory: ./terraform
+        working-directory: ./src/data/manifest/terraform/azure
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET_VALUE }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}      
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ env.AZURE_RESOURCE_GROUP_TFSTATE }}" \
+            -backend-config="storage_account_name=${{ secrets.AZURE_STORAGE_ACCOUNT }}" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=${{ github.event.inputs.environment || 'production' }}.terraform.tfstate"  
 
       - name: Download Terraform Plan
         uses: actions/download-artifact@v4
         with:
           name: tfplan
-          path: terraform/
+          path: ./
 
       - name: Terraform Apply
         if: github.event.inputs.destroy != 'true'
-        run: terraform apply -auto-approve tfplan
-        working-directory: ./terraform
+        working-directory: ./src/data/manifest/terraform/azure
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET_VALUE }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}        
+        run: terraform apply -auto-approve ./tfplan
 
       - name: Terraform Destroy
         if: github.event.inputs.destroy == 'true'
-        run: terraform destroy -auto-approve
-        working-directory: ./terraform
+        working-directory: ./src/data/manifest/terraform/azure
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET_VALUE }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}        
+        run: |
+          terraform destroy -auto-approve \
+            -var="resource_group_name=${{ env.AZURE_RESOURCE_GROUP }}" \
+            -var="location=${{ github.event.inputs.deploy_region || 'eastus' }}" \
+            -var="container_app_environment_name=${{ env.CONTAINER_ENV_NAME }}" \
+            -var="container_app_name=${{ env.CONTAINER_APP_NAME }}" \
+            -var="backend_image=ghcr.io/rajeshannam20/devon.ai-supreme-repo:backend-latest" \
+            -var="frontend_image=ghcr.io/rajeshannam20/devon.ai-supreme-repo:frontend-latest" \
+            -var="environment=${{ github.event.inputs.environment || 'production' }}"
 
       - name: Run Verification Script
         if: github.event.inputs.destroy != 'true'
@@ -224,14 +312,13 @@ jobs:
           else
             echo "No verification script found"
           fi
-
       - name: Slack Success Notification
         if: success()
         uses: 8398a7/action-slack@v3
         with:
           status: success
           channel: '#deployments'
-          text: '✅ Terraform deployment successful to ${{ github.event.inputs.environment || "production" }}'
+          text: "✅ Terraform deployment successful to ${{ github.event.inputs.environment != '' && github.event.inputs.environment || 'production' }}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -241,7 +328,7 @@ jobs:
         with:
           status: failure
           channel: '#deployments'
-          text: '❌ Terraform deployment failed to ${{ github.event.inputs.environment || "production" }}'
+          text: "❌ Terraform deployment failed to ${{ github.event.inputs.environment != '' && github.event.inputs.environment || 'production' }}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -253,11 +340,11 @@ jobs:
           server_port: 465
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: 'Terraform Deployment ${{ job.status }} - ${{ github.event.inputs.environment || "production" }}'
+          subject: "Terraform Deployment ${{ job.status }} - ${{ github.event.inputs.environment != '' && github.event.inputs.environment || 'production' }}"
           to: ${{ secrets.NOTIFICATION_EMAIL }}
           from: 'Devonn.AI CI/CD <noreply@devonn.ai>'
           body: |
-            Terraform deployment ${{ job.status }} for environment: ${{ github.event.inputs.environment || "production" }}
+            Terraform deployment ${{ job.status }} for environment: ${{ github.event.inputs.environment != '' && github.event.inputs.environment || 'production' }}
             
             Repository: ${{ github.repository }}
             Commit: ${{ github.sha }}
