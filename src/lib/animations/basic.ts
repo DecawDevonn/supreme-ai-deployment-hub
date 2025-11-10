@@ -1,76 +1,76 @@
-
 import { CSSProperties } from 'react';
+import { Variants } from 'framer-motion';
 
 // Basic animation variants
-export const fadeIn = {
+export const fadeIn: Variants = {
   hidden: { opacity: 0 },
   visible: { 
     opacity: 1,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as any }
   }
 };
 
-export const slideUp = {
+export const slideUp: Variants = {
   hidden: { opacity: 0, y: 10 },
   visible: { 
     opacity: 1, 
     y: 0,
     transition: { 
       duration: 0.6,
-      ease: [0.22, 1, 0.36, 1]
+      ease: [0.22, 1, 0.36, 1] as any
     }
   }
 };
 
-export const slideDown = {
+export const slideDown: Variants = {
   hidden: { opacity: 0, y: -10 },
   visible: { 
     opacity: 1, 
     y: 0,
     transition: { 
       duration: 0.6,
-      ease: [0.22, 1, 0.36, 1]
+      ease: [0.22, 1, 0.36, 1] as any
     }
   }
 };
 
-export const slideRight = {
+export const slideRight: Variants = {
   hidden: { opacity: 0, x: -10 },
   visible: { 
     opacity: 1, 
     x: 0,
     transition: { 
       duration: 0.6,
-      ease: [0.22, 1, 0.36, 1]
+      ease: [0.22, 1, 0.36, 1] as any
     }
   }
 };
 
-export const slideLeft = {
+export const slideLeft: Variants = {
   hidden: { opacity: 0, x: 10 },
   visible: { 
     opacity: 1, 
     x: 0,
     transition: { 
       duration: 0.6,
-      ease: [0.22, 1, 0.36, 1]
+      ease: [0.22, 1, 0.36, 1] as any
     }
   }
 };
 
-export const scaleIn = {
+export const scaleIn: Variants = {
   hidden: { opacity: 0, scale: 0.97 },
   visible: { 
     opacity: 1, 
     scale: 1,
     transition: { 
       duration: 0.5,
-      ease: [0.22, 1, 0.36, 1]
+      ease: [0.22, 1, 0.36, 1] as any
     }
   }
 };
 
-export const staggerContainer = {
+export const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
