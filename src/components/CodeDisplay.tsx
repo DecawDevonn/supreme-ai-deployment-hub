@@ -26,40 +26,32 @@ const CodeDisplay = ({
 }: CodeDisplayProps) => {
   const [copied, setCopied] = useState(false);
 
-  // Escape HTML to prevent XSS
-  const escapeHtml = (text: string): string => {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  };
-
-  // Simple syntax highlighting functions with XSS protection
+  // Simple syntax highlighting functions
   const highlightCode = (code: string) => {
     if (language === 'yaml') {
-      // Basic YAML highlighting with HTML escaping
+      // Basic YAML highlighting
       return code
         .split('\n')
         .map((line, i) => {
           const lineNumber = i + 1;
           const isHighlighted = highlight.includes(lineNumber);
           
-          // Escape the line first to prevent XSS
-          const escapedLine = escapeHtml(line);
-          
-          // Apply syntax highlighting after escaping
-          let highlightedLine = escapedLine.replace(
+          // Highlight comments
+          let highlightedLine = line.replace(
             /(#.*)$/g,
             '<span class="comment">$1</span>'
           );
           
+          // Highlight keys
           highlightedLine = highlightedLine.replace(
             /^(\s*)([\w\-]+):/g,
             '$1<span class="keyword">$2</span>:'
           );
           
+          // Highlight strings
           highlightedLine = highlightedLine.replace(
-            /&#39;([^&#39;]*)&#39;/g,
-            '<span class="string">&#39;$1&#39;</span>'
+            /'([^']*)'/g,
+            '<span class="string">\'$1\'</span>'
           );
           
           return (
@@ -81,7 +73,7 @@ const CodeDisplay = ({
         });
     }
     
-    // Default simple highlighting - no HTML rendering
+    // Default simple highlighting
     return code.split('\n').map((line, i) => (
       <div key={i} className="code-line">
         {showLineNumbers && (

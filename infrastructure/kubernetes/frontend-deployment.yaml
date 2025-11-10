@@ -15,5 +15,6 @@ spec:
       containers:
       - name: devonn-frontend
         image: "${FRONTEND_IMAGE}"
+        imagePullPolicy: Always
         ports:
         - containerPort: 80

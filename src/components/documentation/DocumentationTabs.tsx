@@ -10,12 +10,11 @@ import APIReferenceTab from './APIReferenceTab';
 import ExamplesTab from './ExamplesTab';
 import DomainConfigTab from './DomainConfigTab';
 import DeploymentGuideTab from './DeploymentGuideTab';
-import AuthDocumentationTab from './AuthDocumentationTab';
 
 const DocumentationTabs: React.FC = () => {
   return (
     <Tabs defaultValue="overview" className="space-y-4">
-      <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2">
+      <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="getting-started">Getting Started</TabsTrigger>
         <TabsTrigger value="guides">Guides</TabsTrigger>
@@ -24,7 +23,6 @@ const DocumentationTabs: React.FC = () => {
         <TabsTrigger value="deployment">Deployment</TabsTrigger>
         <TabsTrigger value="examples">Examples</TabsTrigger>
         <TabsTrigger value="domain">Domain Config</TabsTrigger>
-        <TabsTrigger value="auth">Authentication</TabsTrigger>
       </TabsList>
 
       <TabsContent value="overview">
@@ -57,10 +55,6 @@ const DocumentationTabs: React.FC = () => {
 
       <TabsContent value="domain">
         <DomainConfigTab />
-      </TabsContent>
-
-      <TabsContent value="auth">
-        <AuthDocumentationTab />
       </TabsContent>
     </Tabs>
   );

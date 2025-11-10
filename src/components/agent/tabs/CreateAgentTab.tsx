@@ -77,7 +77,14 @@ const CreateAgentTab: React.FC<CreateAgentTabProps> = ({
       return;
     }
     
-    toast.error("File upload temporarily disabled. Please implement with proper Supabase authentication.");
+    try {
+      const token = localStorage.getItem("authToken") || "guest-token";
+      await agentApi.uploadTaskFile(file, token);
+      toast.success("File uploaded successfully");
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast.error("Failed to upload file");
+    }
   };
 
   return (

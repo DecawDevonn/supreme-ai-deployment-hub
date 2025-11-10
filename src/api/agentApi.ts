@@ -5,7 +5,7 @@
 import { agentCoreApi } from './agent/agentCore';
 import { agentMemoryApi } from './agent/agentMemory';
 import { agentToolsApi } from './agent/agentTools';
-import { workflowApi, visualWorkflowApi } from './agent/workflowApi';
+import { workflowApi } from './agent/workflowApi';
 import { fileApi } from './agent/fileApi';
 
 // Combine all API modules into a single export for backward compatibility
@@ -19,12 +19,9 @@ export const agentApi = {
   // Tools operations
   ...agentToolsApi,
   
-  // Workflow operations (agent-based DAG workflows)
+  // Workflow operations
   ...workflowApi,
   
   // File operations
   ...fileApi
 };
-
-// Export visual workflow API separately
-export { visualWorkflowApi };

@@ -46,7 +46,7 @@ export const deploymentCommandsData: DeploymentCommand[] = [
     command: 'aws eks update-kubeconfig --name devonn-eks-prod --region us-west-2',
     provider: 'aws'
   },
-  
+
   // Azure Commands
   {
     id: 'azure-login',
@@ -83,7 +83,7 @@ export const deploymentCommandsData: DeploymentCommand[] = [
     command: 'az aks get-credentials --resource-group devonn-prod-rg --name devonn-aks-prod',
     provider: 'azure'
   },
-  
+
   // GCP Commands
   {
     id: 'gcp-login',
@@ -120,7 +120,7 @@ export const deploymentCommandsData: DeploymentCommand[] = [
     command: 'gcloud container clusters get-credentials devonn-gke-prod --region us-central1',
     provider: 'gcp'
   },
-  
+
   // Generic Kubernetes Commands (provider-agnostic)
   {
     id: 'kubectl-get-nodes',

@@ -14,7 +14,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: devonn-frontend-direct
+  name: devonn-frontend-service
   namespace: devonn
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-type: "nlb"

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,28 +7,14 @@ import { Workflow, WorkflowExecution, WorkflowTemplate } from '@/types/workflow'
 import { n8nService } from '@/services/workflow/n8nService';
 import WorkflowBuilder from './WorkflowBuilder';
 import WorkflowTemplates from './WorkflowTemplates';
-import WorkflowGenerator from './WorkflowGenerator';
-import { Play, Pause, MoreVertical, Clock, CheckCircle, XCircle, AlertCircle, Sparkles } from 'lucide-react';
+import { Play, Pause, MoreVertical, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { DndContext, DragEndEvent, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { SortableItem } from '@/components/ui/sortable-item';
 
 const WorkflowManager: React.FC = () => {
-  const [searchParams] = useSearchParams();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [executions, setExecutions] = useState<WorkflowExecution[]>([]);
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>(searchParams.get('tab') || 'workflows');
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
 
   useEffect(() => {
     loadWorkflows();
@@ -122,18 +107,6 @@ const WorkflowManager: React.FC = () => {
     );
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      setWorkflows((items) => {
-        const oldIndex = items.findIndex(item => item.id === active.id);
-        const newIndex = items.findIndex(item => item.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -146,69 +119,55 @@ const WorkflowManager: React.FC = () => {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs defaultValue="workflows" className="space-y-6">
         <TabsList>
           <TabsTrigger value="workflows">My Workflows</TabsTrigger>
-          <TabsTrigger value="ai-generator">
-            <Sparkles className="h-4 w-4 mr-2" />
-            AI Generator
-          </TabsTrigger>
           <TabsTrigger value="builder">Workflow Builder</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="executions">Executions</TabsTrigger>
         </TabsList>
 
         <TabsContent value="workflows" className="space-y-4">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext items={workflows.map(w => w.id)} strategy={verticalListSortingStrategy}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {workflows.map(workflow => (
-                  <SortableItem key={workflow.id} id={workflow.id} className="group">
-                    <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <CardTitle className="text-base">{workflow.name}</CardTitle>
-                            <p className="text-sm text-muted-foreground">{workflow.description}</p>
-                          </div>
-                          <Badge variant={workflow.active ? 'default' : 'secondary'}>
-                            {workflow.active ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm text-muted-foreground">
-                            {workflow.nodes.length} nodes
-                          </div>
-                          <div className="flex gap-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => setSelectedWorkflow(workflow)}
-                            >
-                              Edit
-                            </Button>
-                            <Button 
-                              size="sm"
-                              onClick={() => handleExecuteWorkflow(workflow)}
-                              disabled={!workflow.active}
-                            >
-                              <Play className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </SortableItem>
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {workflows.map(workflow => (
+              <Card key={workflow.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-base">{workflow.name}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{workflow.description}</p>
+                    </div>
+                    <Badge variant={workflow.active ? 'default' : 'secondary'}>
+                      {workflow.active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      {workflow.nodes.length} nodes
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setSelectedWorkflow(workflow)}
+                      >
+                        Edit
+                      </Button>
+                      <Button 
+                        size="sm"
+                        onClick={() => handleExecuteWorkflow(workflow)}
+                        disabled={!workflow.active}
+                      >
+                        <Play className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
           {workflows.length === 0 && (
             <div className="text-center py-12">
@@ -221,13 +180,6 @@ const WorkflowManager: React.FC = () => {
               </Button>
             </div>
           )}
-        </TabsContent>
-
-        <TabsContent value="ai-generator">
-          <WorkflowGenerator onWorkflowSaved={(workflow) => {
-            setWorkflows(prev => [...prev, workflow]);
-            toast.success('Workflow added to your collection');
-          }} />
         </TabsContent>
 
         <TabsContent value="builder">

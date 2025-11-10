@@ -15,5 +15,6 @@ spec:
       containers:
       - name: devonn-backend
         image: "${BACKEND_IMAGE}"
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080

@@ -12,7 +12,11 @@ import { randomItem, randomIntBetween } from 'https://jslib.k6.io/k6-utils/1.2.0
  */
 
 // Configuration
-const API_ENDPOINT = __ENV.API_ENDPOINT || 'https://api.devonn.ai';
+
+const BACKEND_IP = __ENV.APPLICATION_IP || 'default-backend-ip';
+const API_ENDPOINT = `http://${BACKEND_IP}`;
+
+// const API_ENDPOINT = __ENV.API_ENDPOINT || 'https://api.devonn.ai';
 const API_KEY = __ENV.API_KEY || 'test-api-key';
 
 // Custom metrics
@@ -42,7 +46,7 @@ export const options = {
     constant_load: {
       executor: 'constant-vus',
       vus: 20,
-      duration: '3m',
+      duration: '2m',
       startTime: '1m30s',
       exec: 'constantLoad',
     },
@@ -53,8 +57,8 @@ export const options = {
       startVUs: 5,
       stages: [
         { duration: '30s', target: 5 },
-        { duration: '30s', target: 50 },
-        { duration: '1m', target: 50 },
+        { duration: '30s', target: 30 },
+        { duration: '1m', target: 30 },
         { duration: '30s', target: 5 },
       ],
       startTime: '5m',
@@ -67,8 +71,8 @@ export const options = {
       startVUs: 5,
       stages: [
         { duration: '2m', target: 100 },
-        { duration: '5m', target: 100 },
-        { duration: '2m', target: 0 },
+        { duration: '3m', target: 100 },
+        { duration: '1m', target: 0 },
       ],
       startTime: '7m',
       exec: 'stressTest',

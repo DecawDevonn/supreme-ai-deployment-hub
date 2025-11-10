@@ -23,8 +23,43 @@ const STORAGE_KEY = 'devonn_api_configs';
 export const APIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [apiConfigs, setAPIConfigs] = useState<APIConfig[]>([]);
   
-  // Note: API configurations are now stored server-side only for security
-  // No localStorage usage to prevent XSS attacks from accessing credentials
+  // Load saved configs from localStorage on initial load
+  useEffect(() => {
+    const savedConfigs = localStorage.getItem(STORAGE_KEY);
+    if (savedConfigs) {
+      try {
+        const parsedConfigs = JSON.parse(savedConfigs) as APIConfig[];
+        
+        // Decrypt any stored API keys
+        const decryptedConfigs = parsedConfigs.map(config => ({
+          ...config,
+          apiKey: config.apiKey ? decrypt(config.apiKey) : undefined
+        }));
+        
+        setAPIConfigs(decryptedConfigs);
+      } catch (error) {
+        console.error('Error loading API configurations:', error);
+        toast.error('Failed to load saved API configurations');
+      }
+    }
+  }, []);
+  
+  // Save configs to localStorage whenever they change
+  useEffect(() => {
+    if (apiConfigs.length > 0) {
+      try {
+        // Encrypt API keys before storing
+        const encryptedConfigs = apiConfigs.map(config => ({
+          ...config,
+          apiKey: config.apiKey ? encrypt(config.apiKey) : undefined
+        }));
+        
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(encryptedConfigs));
+      } catch (error) {
+        console.error('Error saving API configurations:', error);
+      }
+    }
+  }, [apiConfigs]);
   
   const addAPIConfig = (config: NewAPIConfig) => {
     setAPIConfigs(prev => {
@@ -115,7 +150,6 @@ export const APIProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Get decrypted API key by name
   const getSecureAPIKey = (name: string): string | undefined => {
     const config = apiConfigs.find(c => c.name === name);
-    // API key is already decrypted in memory
     return config?.apiKey;
   };
   

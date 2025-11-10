@@ -5,5 +5,3 @@ export * from './workflowService';
 export * from './fileService';
 export * from './toolsService';
 export * from './memoryService';
-export * from './gitOpsService';
-export * from './advancedAIService';

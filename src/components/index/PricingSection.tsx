@@ -29,7 +29,7 @@ const plans = [
   {
     name: "Professional",
     description: "For teams building production AI systems",
-    price: { monthly: 149, annual: 119 },
+    price: { monthly: 99, annual: 79 },
     features: [
       { name: "Core AI Deployment Framework", included: true },
       { name: "Advanced Observability", included: true },
@@ -45,7 +45,7 @@ const plans = [
   {
     name: "Enterprise",
     description: "For organizations with advanced AI deployment needs",
-    price: { monthly: 499, annual: 399 },
+    price: { monthly: 299, annual: 249 },
     features: [
       { name: "Core AI Deployment Framework", included: true },
       { name: "Enterprise Observability", included: true },

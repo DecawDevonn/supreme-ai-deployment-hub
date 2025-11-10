@@ -1,319 +1,138 @@
+
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import Container from '@/components/Container';
+import SectionHeading from '@/components/SectionHeading';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { MatrixRain } from '@/components/ui/matrix-rain';
-import { 
-  Workflow, 
-  Network, 
-  Brain, 
-  MessageSquare, 
-  Shield, 
-  BarChart3,
-  Sparkles,
-  Building2,
-  Users,
-  Rocket
-} from 'lucide-react';
+import { Users2, Award, Target, Coffee } from 'lucide-react';
 
 const About: React.FC = () => {
-  const navigate = useNavigate();
-
-  const timeline = [
-    { year: '2020', event: 'Devonn.ai established in Dubai' },
-    { year: '2021', event: 'Foundation of knowledge graph and agentic systems' },
-    { year: '2022', event: 'Expanded with multi-cloud support & automation engines' },
-    { year: '2023', event: 'Introduced modular integrations (n8n, APIs, marketplaces)' },
-    { year: '2024+', event: 'Evolution into global-scale adaptive AI ecosystems' }
-  ];
-
-  const capabilities = [
+  const teamMembers = [
     {
-      icon: Workflow,
-      title: 'Workflow Manager',
-      description: 'Automation + DAG execution for seamless operations'
+      name: "Alex Morgan",
+      role: "Founder & Lead Architect",
+      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d",
+      bio: "Former ML Ops engineer with 10+ years of experience deploying AI systems at scale."
     },
     {
-      icon: Network,
-      title: 'API Integrations',
-      description: 'External service connectors and unified data flow'
+      name: "Sarah Chen",
+      role: "Head of AI Research",
+      image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
+      bio: "PhD in Computer Science specializing in ML infrastructure and distributed systems."
     },
     {
-      icon: Brain,
-      title: 'Knowledge Graph Layer',
-      description: 'Contextual reasoning + blind-spot detection'
-    },
-    {
-      icon: MessageSquare,
-      title: 'Copilot Chat',
-      description: 'Interactive agents with parallel intelligence'
-    },
-    {
-      icon: Shield,
-      title: 'Security & Analytics',
-      description: 'Enterprise-grade protection and insights'
-    },
-    {
-      icon: Sparkles,
-      title: 'Creative Studio',
-      description: 'Video, audio, AR/VR, content generation'
+      name: "Michael Kim",
+      role: "Lead DevOps Engineer",
+      image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
+      bio: "Kubernetes expert with experience at major cloud providers designing resilient systems."
     }
   ];
-
-  const visionKeywords = ['Knowledge', 'Creativity', 'Automation', 'Connection', 'Expansion'];
 
   return (
     <>
       <Helmet>
-        <title>About DEVONN.AI - Intelligence Beyond Boundaries</title>
-        <meta name="description" content="Founded by Wesley Little in Dubai, est. 2020. Merging intelligence, automation, and creativity into a single adaptive AI ecosystem." />
+        <title>About DEVONN.AI</title>
       </Helmet>
-
-      {/* Hero Section */}
-      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
-        <MatrixRain className="absolute inset-0 opacity-20" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/80 to-background" />
+      <Container>
+        <SectionHeading
+          subheading="Learn about our mission and the team behind DEVONN.AI"
+        >
+          About Us
+        </SectionHeading>
         
-        <Container className="relative z-10 text-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 py-8 items-center">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent">
-              Intelligence Beyond Boundaries
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-4 max-w-3xl mx-auto">
-              Founded by <span className="text-primary font-semibold">Wesley Little</span> in collaboration with{' '}
-              <span className="text-primary font-semibold">Wesship8 & Arising Atlantis</span>
+            <h2 className="text-2xl font-display font-semibold mb-4">Our Mission</h2>
+            <p className="text-muted-foreground mb-4">
+              DEVONN.AI was founded in 2023 with a simple but powerful mission: to make AI deployment accessible, reliable, and efficient for organizations of all sizes.
             </p>
-            <p className="text-lg text-muted-foreground mb-8">Est. 2020, Dubai</p>
+            <p className="text-muted-foreground mb-4">
+              We believe that the future of AI lies not just in model development, but in creating robust infrastructure that allows those models to deliver real value in production environments.
+            </p>
+            <p className="text-muted-foreground">
+              Our framework bridges the gap between research and real-world applications, empowering teams to focus on innovation rather than infrastructure challenges.
+            </p>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="grid grid-cols-2 gap-4"
+          >
+            <Card className="bg-primary/5 border-primary/10">
+              <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+                <Users2 className="h-10 w-10 text-primary mb-4" />
+                <h3 className="font-semibold">25+</h3>
+                <p className="text-sm text-muted-foreground">Team Members</p>
+              </CardContent>
+            </Card>
             
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Button size="lg" onClick={() => navigate('/documentation')}>
-                Explore Capabilities
-              </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate('/auth')}>
-                Join the Journey
-              </Button>
-            </div>
-          </motion.div>
-        </Container>
-      </section>
-
-      {/* Mission & Vision */}
-      <section className="py-24 bg-muted/30">
-        <Container>
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">Mission & Vision</h2>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Devonn.ai was built to merge intelligence, automation, and creativity into a single adaptive system — 
-                an AI ecosystem designed to empower individuals, businesses, and the future of digital interaction.
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex flex-wrap gap-4 justify-center"
-            >
-              {visionKeywords.map((keyword, i) => (
-                <motion.div
-                  key={keyword}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.1 }}
-                  whileHover={{ scale: 1.1 }}
-                  className="px-6 py-3 bg-primary/10 border border-primary/30 rounded-full text-primary font-semibold"
-                >
-                  {keyword}
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </Container>
-      </section>
-
-      {/* Timeline */}
-      <section className="py-24">
-        <Container>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Journey</h2>
-            <p className="text-lg text-muted-foreground">From inception to innovation</p>
-          </motion.div>
-
-          <div className="max-w-3xl mx-auto">
-            {timeline.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="flex gap-6 mb-8 last:mb-0"
-              >
-                <div className="flex flex-col items-center">
-                  <div className="w-4 h-4 rounded-full bg-primary shadow-lg shadow-primary/50" />
-                  {i !== timeline.length - 1 && (
-                    <div className="w-0.5 h-full bg-gradient-to-b from-primary to-primary/20 mt-2" />
-                  )}
-                </div>
-                <div className="pb-8">
-                  <span className="text-2xl font-bold text-primary">{item.year}</span>
-                  <p className="text-lg text-muted-foreground mt-2">{item.event}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* Capabilities */}
-      <section className="py-24 bg-muted/30">
-        <Container>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Core Capabilities</h2>
-            <p className="text-lg text-muted-foreground">Modular systems built for the future</p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {capabilities.map((capability, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-              >
-                <Card className="h-full transition-all hover:shadow-lg hover:shadow-primary/20 hover:border-primary/50 group">
-                  <CardContent className="p-6">
-                    <capability.icon className="h-12 w-12 text-primary mb-4 group-hover:scale-110 transition-transform" />
-                    <h3 className="text-xl font-semibold mb-2">{capability.title}</h3>
-                    <p className="text-muted-foreground">{capability.description}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* Why Dubai */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10" />
-        <Container className="relative z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <Building2 className="h-16 w-16 text-primary mb-6" />
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">Why Dubai?</h2>
-              <ul className="space-y-4 text-lg text-muted-foreground">
-                <li className="flex items-start gap-3">
-                  <span className="text-primary">✓</span>
-                  <span>Global innovation hub at the crossroads of East & West</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-primary">✓</span>
-                  <span>Emerging AI regulatory and business ecosystem</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-primary">✓</span>
-                  <span>Strategic location advantage for worldwide reach</span>
-                </li>
-              </ul>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="relative h-64 md:h-96 rounded-lg overflow-hidden"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c"
-                alt="Dubai skyline"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-            </motion.div>
-          </div>
-        </Container>
-      </section>
-
-      {/* Ownership & Collaboration */}
-      <section className="py-24 bg-muted/30">
-        <Container>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-3xl mx-auto text-center"
-          >
-            <Users className="h-16 w-16 text-primary mx-auto mb-6" />
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Founder's Vision</h2>
-            <blockquote className="text-xl text-muted-foreground italic leading-relaxed mb-6">
-              "As the creator of Devonn.ai, I envisioned a system that doesn't just answer questions but grows with you, 
-              adapts to your workflow, and integrates with your world."
-            </blockquote>
-            <p className="text-lg font-semibold text-primary">— Wesley Little, Founder</p>
-          </motion.div>
-        </Container>
-      </section>
-
-      {/* Closing CTA */}
-      <section className="py-24 relative overflow-hidden">
-        <MatrixRain className="absolute inset-0 opacity-10" />
-        <Container className="relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <Rocket className="h-16 w-16 text-primary mx-auto mb-6" />
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              Devonn.ai is not just a tool — it's an evolving intelligence
-            </h2>
-            <p className="text-xl text-muted-foreground mb-8">Let's build the future together</p>
+            <Card className="bg-primary/5 border-primary/10">
+              <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+                <Award className="h-10 w-10 text-primary mb-4" />
+                <h3 className="font-semibold">15+</h3>
+                <p className="text-sm text-muted-foreground">Industry Awards</p>
+              </CardContent>
+            </Card>
             
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Button size="lg" onClick={() => navigate('/auth')}>
-                Get Started
-              </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate('/documentation#integrations')}>
-                View Integrations
-              </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate('/contact')}>
-                Contact Us
-              </Button>
-            </div>
+            <Card className="bg-primary/5 border-primary/10">
+              <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+                <Target className="h-10 w-10 text-primary mb-4" />
+                <h3 className="font-semibold">100+</h3>
+                <p className="text-sm text-muted-foreground">Successful Deployments</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-primary/5 border-primary/10">
+              <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+                <Coffee className="h-10 w-10 text-primary mb-4" />
+                <h3 className="font-semibold">∞</h3>
+                <p className="text-sm text-muted-foreground">Cups of Coffee</p>
+              </CardContent>
+            </Card>
           </motion.div>
-        </Container>
-      </section>
+        </div>
+        
+        <SectionHeading
+          tag="Our Team"
+          subheading="Meet the experts behind DEVONN.AI"
+          centered
+        >
+          Leadership Team
+        </SectionHeading>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-8">
+          {teamMembers.map((member, i) => (
+            <motion.div
+              key={member.name}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 * i }}
+            >
+              <Card className="overflow-hidden h-full transition-all hover:shadow-lg">
+                <div className="aspect-[4/3] relative overflow-hidden">
+                  <img 
+                    src={member.image} 
+                    alt={member.name} 
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold text-lg">{member.name}</h3>
+                  <p className="text-primary text-sm mb-2">{member.role}</p>
+                  <p className="text-muted-foreground text-sm">{member.bio}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </Container>
     </>
   );
 };
