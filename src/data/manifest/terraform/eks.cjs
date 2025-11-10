@@ -89,20 +89,8 @@ resource "aws_iam_role" "vpc_cni_role" {
   })
 }
 
-# Data Source to Check if VPC CNI Add-on Exists
-data "aws_eks_addon" "vpc_cni_check" {
-  cluster_name = module.eks.cluster_name
-  addon_name   = "vpc-cni"
-}
-
-# EKS Add-on: VPC CNI - Create it only if it doesn't exist
-resource "aws_eks_addon" "vpc_cni" {
-  count             = length(try([data.aws_eks_addon.vpc_cni_check.addon_name], [])) == 0 ? 1 : 0
-  cluster_name      = module.eks.cluster_name
-  addon_name        = "vpc-cni"
-  addon_version     = "v1.11.6-eksbuild.1"
-  service_account_role_arn = aws_iam_role.vpc_cni_role.arn
-}
+// Note: VPC CNI add-on is intentionally not managed here to avoid creation loops
+// and version pinning issues. Let EKS manage it or install manually if needed.
 
 
 

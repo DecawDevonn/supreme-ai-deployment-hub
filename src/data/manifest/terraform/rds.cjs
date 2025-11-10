@@ -151,7 +151,8 @@ module "rds" {
 
 resource "null_resource" "check_parameter_group_exists" {
   provisioner "local-exec" {
-    command = "aws rds describe-db-parameter-groups --db-parameter-group-name devonn-postgres-params-\${var.environment} --query 'DBParameterGroups[0].DBParameterGroupName' --output text"
+    command    = "aws rds describe-db-parameter-groups --db-parameter-group-name devonn-postgres-params-\${var.environment} --query 'DBParameterGroups[0].DBParameterGroupName' --output text || true"
+    on_failure = continue
   }
 
   # Create before destroy ensures the check happens even before any state changes
