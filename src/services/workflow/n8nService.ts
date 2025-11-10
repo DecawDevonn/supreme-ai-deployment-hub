@@ -224,6 +224,152 @@ export class N8nService {
   getWorkflowTemplates(): WorkflowTemplate[] {
     return [
       {
+        id: 'devonn-production-batch',
+        name: 'Devonn.AI Production Batch Video Pipeline',
+        description: 'Automated cron-scheduled workflow for script × character × voice permutation generation with Yapper, multi-character swaps, FFmpeg processing, quality checks, HITL review, and cloud upload',
+        category: 'ai-agent',
+        popularity: 98,
+        featured: true,
+        workflow: {
+          name: 'DevonnAI_Production_Batch_Video_Pipeline',
+          category: 'ai-agent',
+          nodes: [
+            {
+              id: 'cron-trigger',
+              type: 'cron',
+              name: 'Cron Trigger',
+              parameters: {
+                cronExpression: '0 2 * * *',
+                description: 'Daily execution at 2 AM'
+              },
+              position: { x: 200, y: 200 }
+            },
+            {
+              id: 'permutation-gen',
+              type: 'agent',
+              name: 'Permutation Generator',
+              parameters: {
+                task: 'Generate script × character × voice permutations',
+                model: 'gpt-4'
+              },
+              position: { x: 400, y: 200 }
+            },
+            {
+              id: 'batch-split',
+              type: 'stage',
+              name: 'Split In Batches',
+              parameters: {
+                batchSize: 5,
+                description: 'Concurrency control for parallel processing'
+              },
+              position: { x: 600, y: 200 }
+            },
+            {
+              id: 'yapper-upload',
+              type: 'tool',
+              name: 'Upload Script to Yapper',
+              parameters: {
+                platform: 'Yapper',
+                operation: 'upload'
+              },
+              position: { x: 800, y: 200 }
+            },
+            {
+              id: 'voice-char-integration',
+              type: 'agent',
+              name: 'Voice + Character Integration',
+              parameters: {
+                task: 'Integrate ElevenLabs voice with character style'
+              },
+              position: { x: 1000, y: 200 }
+            },
+            {
+              id: 'multi-char-swap',
+              type: 'tool',
+              name: 'Multi-Character Swap',
+              parameters: {
+                platform: 'Luma',
+                operation: 'modify-video'
+              },
+              position: { x: 1200, y: 200 }
+            },
+            {
+              id: 'ffmpeg-process',
+              type: 'agent',
+              name: 'FFmpeg Processing',
+              parameters: {
+                task: 'Dynamic video processing: trim, resize, watermark, audio normalization'
+              },
+              position: { x: 1400, y: 200 }
+            },
+            {
+              id: 'quality-check',
+              type: 'agent',
+              name: 'Quality Check',
+              parameters: {
+                task: 'Automated quality validation: resolution, lip-sync, artifact detection'
+              },
+              position: { x: 1600, y: 200 }
+            },
+            {
+              id: 'hitl-retry',
+              type: 'stage',
+              name: 'HITL / Retry Decision',
+              parameters: {
+                description: 'Route to HITL review or retry (max 2 attempts)'
+              },
+              position: { x: 1800, y: 200 }
+            },
+            {
+              id: 'hitl-queue',
+              type: 'stage',
+              name: 'HITL Queue',
+              parameters: {
+                description: 'Human-in-the-loop review queue'
+              },
+              position: { x: 2000, y: 100 }
+            },
+            {
+              id: 'failed-queue',
+              type: 'stage',
+              name: 'Failed Queue',
+              parameters: {
+                description: 'Failed videos after max retries'
+              },
+              position: { x: 2000, y: 300 }
+            },
+            {
+              id: 'cloud-upload',
+              type: 'tool',
+              name: 'Upload Approved Video',
+              parameters: {
+                platform: 'CloudStorage',
+                operation: 'upload'
+              },
+              position: { x: 2200, y: 100 }
+            },
+            {
+              id: 'knowledge-graph',
+              type: 'agent',
+              name: 'Update Knowledge Graph',
+              parameters: {
+                task: 'Store metadata: character_id, voice_id, script_id, video_url'
+              },
+              position: { x: 2400, y: 100 }
+            },
+            {
+              id: 'analytics-logger',
+              type: 'agent',
+              name: 'Analytics Logger',
+              parameters: {
+                task: 'Log all execution data for analysis'
+              },
+              position: { x: 2200, y: 300 }
+            }
+          ]
+        }
+      },
+      {
         id: 'film-ai-enhanced',
         name: 'AI-Enhanced Film Production',
         description: 'Complete AI-powered filmmaking pipeline from script to final footage using LTX Studio',
