@@ -22,7 +22,7 @@ export const deploymentCommandsData: DeploymentCommand[] = [
     id: 'aws-terraform-init',
     title: 'Initialize Terraform (AWS)',
     description: 'Set up Terraform in your project directory for AWS',
-    command: 'terraform init -backend-config="bucket=devonn-terraform-state" -backend-config="region=us-west-2"',
+    command: 'terraform init -backend-config="bucket=devonn-terraform-statefile" -backend-config="region=us-west-2"',
     provider: 'aws'
   },
   {
@@ -96,7 +96,7 @@ export const deploymentCommandsData: DeploymentCommand[] = [
     id: 'gcp-terraform-init',
     title: 'Initialize Terraform (GCP)',
     description: 'Set up Terraform in your project directory for GCP',
-    command: 'terraform init -backend-config="bucket=devonn-terraform-state" -backend-config="prefix=terraform/state"',
+    command: 'terraform init -backend-config="bucket=devonn-terraform-statefile" -backend-config="prefix=terraform/state"',
     provider: 'gcp'
   },
   {
