@@ -52,7 +52,7 @@ const PocketFlow: React.FC = () => {
   
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [],
+    [setEdges],
   );
 
   return (
