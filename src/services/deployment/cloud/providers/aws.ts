@@ -3,11 +3,22 @@ import type { CloudCommandResult, ExecuteCommandOptions } from '../types';
 import { classifyCloudError } from '../errorHandling';
 import { simulateCommandExecution } from '../simulator';
 
+// Import real AWS implementation
+import * as awsReal from './awsReal';
+
+// Feature flag to enable real AWS operations
+const USE_REAL_AWS = import.meta.env.VITE_USE_REAL_AWS === 'true' || true; // Default to true
+
 // AWS Client implementation (browser-compatible version)
 export const getAwsProviderClient = async (): Promise<{ 
   sts: any,
   eks?: any
 }> => {
+  // Use real AWS if enabled
+  if (USE_REAL_AWS) {
+    return awsReal.getAwsProviderClient();
+  }
+  
   try {
     console.log('Creating simulated AWS client for browser environment');
     
@@ -69,6 +80,11 @@ export const executeAwsCommand = async (
   command: string, 
   options: ExecuteCommandOptions
 ): Promise<CloudCommandResult> => {
+  // Use real AWS if enabled
+  if (USE_REAL_AWS) {
+    return awsReal.executeAwsCommand(command, options);
+  }
+  
   try {
     console.log('Executing simulated AWS command:', command);
     
@@ -122,6 +138,11 @@ export const executeAwsCommand = async (
 
 // Helper functions for specific AWS operations
 export const listEksClusters = async (): Promise<string[]> => {
+  // Use real AWS if enabled
+  if (USE_REAL_AWS) {
+    return awsReal.listEksClusters();
+  }
+  
   try {
     // Return simulated cluster list
     return ['dev-cluster', 'staging-cluster', 'prod-cluster'];
@@ -132,6 +153,11 @@ export const listEksClusters = async (): Promise<string[]> => {
 };
 
 export const describeEksCluster = async (clusterName: string): Promise<any> => {
+  // Use real AWS if enabled
+  if (USE_REAL_AWS) {
+    return awsReal.describeEksCluster(clusterName);
+  }
+  
   try {
     // Return simulated cluster description
     return {
