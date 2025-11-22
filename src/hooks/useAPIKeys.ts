@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Eye, EyeOff, ClipboardCopy } from 'lucide-react';
 import { encrypt, decrypt, shouldRotateKey } from '@/utils/encryption';
 
-// Constants for localStorage keys
+// Constants for sessionStorage keys (cleared on tab close for security)
 const LAST_USED_KEY = 'devonn_api_last_used';
 const ENCRYPTION_TIMESTAMP_KEY = 'devonn_api_encryption_timestamp';
 
@@ -19,11 +19,11 @@ export const useAPIKeys = () => {
   const [lastUsed, setLastUsed] = useState<Record<string, Date>>({});
   const [encryptionTimestamp, setEncryptionTimestamp] = useState<number>(0);
 
-  // Load last used timestamps and encryption timestamp from localStorage
+  // Load last used timestamps and encryption timestamp from sessionStorage
   useEffect(() => {
     try {
       // Load last used timestamps
-      const savedLastUsed = localStorage.getItem(LAST_USED_KEY);
+      const savedLastUsed = sessionStorage.getItem(LAST_USED_KEY);
       if (savedLastUsed) {
         const parsed = JSON.parse(savedLastUsed);
         // Convert string dates back to Date objects
@@ -35,7 +35,7 @@ export const useAPIKeys = () => {
       }
       
       // Load encryption timestamp
-      const savedEncryptionTimestamp = localStorage.getItem(ENCRYPTION_TIMESTAMP_KEY);
+      const savedEncryptionTimestamp = sessionStorage.getItem(ENCRYPTION_TIMESTAMP_KEY);
       if (savedEncryptionTimestamp) {
         setEncryptionTimestamp(parseInt(savedEncryptionTimestamp, 10));
       }
@@ -64,7 +64,7 @@ export const useAPIKeys = () => {
       
       // Update timestamp
       const now = Date.now();
-      localStorage.setItem(ENCRYPTION_TIMESTAMP_KEY, now.toString());
+      sessionStorage.setItem(ENCRYPTION_TIMESTAMP_KEY, now.toString());
       setEncryptionTimestamp(now);
       
       console.log('API keys rotated successfully');
@@ -79,7 +79,7 @@ export const useAPIKeys = () => {
     setLastUsed(prev => {
       const updated = { ...prev, [apiName]: now };
       try {
-        localStorage.setItem(LAST_USED_KEY, JSON.stringify(
+        sessionStorage.setItem(LAST_USED_KEY, JSON.stringify(
           Object.entries(updated).reduce((acc, [key, value]) => {
             acc[key] = value.toISOString();
             return acc;
@@ -118,7 +118,7 @@ export const useAPIKeys = () => {
     
     // Update encryption timestamp
     const now = Date.now();
-    localStorage.setItem(ENCRYPTION_TIMESTAMP_KEY, now.toString());
+    sessionStorage.setItem(ENCRYPTION_TIMESTAMP_KEY, now.toString());
     setEncryptionTimestamp(now);
     
     // Hide the key after setting it
