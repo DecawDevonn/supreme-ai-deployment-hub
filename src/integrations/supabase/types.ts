@@ -104,6 +104,42 @@ export type Database = {
         }
         Relationships: []
       }
+      cloud_credentials: {
+        Row: {
+          created_at: string
+          credentials: string
+          id: string
+          is_active: boolean
+          last_validated_at: string | null
+          provider: string
+          region: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credentials: string
+          id?: string
+          is_active?: boolean
+          last_validated_at?: string | null
+          provider: string
+          region?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credentials?: string
+          id?: string
+          is_active?: boolean
+          last_validated_at?: string | null
+          provider?: string
+          region?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           content: string
@@ -253,6 +289,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      deployment_logs: {
+        Row: {
+          cluster_name: string | null
+          created_at: string
+          environment: string
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          provider: string
+          started_at: string
+          status: string
+          steps: Json
+          user_id: string
+        }
+        Insert: {
+          cluster_name?: string | null
+          created_at?: string
+          environment: string
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          provider: string
+          started_at?: string
+          status: string
+          steps?: Json
+          user_id: string
+        }
+        Update: {
+          cluster_name?: string | null
+          created_at?: string
+          environment?: string
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          provider?: string
+          started_at?: string
+          status?: string
+          steps?: Json
+          user_id?: string
+        }
+        Relationships: []
       }
       enrollments: {
         Row: {
