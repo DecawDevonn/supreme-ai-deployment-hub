@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_earnings: {
+        Row: {
+          agent_id: string
+          amount: number
+          description: string | null
+          earned_at: string | null
+          id: string
+          metadata: Json | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          amount: number
+          description?: string | null
+          earned_at?: string | null
+          id?: string
+          metadata?: Json | null
+          source: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          amount?: number
+          description?: string | null
+          earned_at?: string | null
+          id?: string
+          metadata?: Json | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_earnings_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "money_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_connections: {
         Row: {
           auth_type: Database["public"]["Enums"]["auth_type"]
@@ -490,6 +531,51 @@ export type Database = {
           stream_url?: string | null
           thumbnail_url?: string | null
           title?: string
+        }
+        Relationships: []
+      }
+      money_agents: {
+        Row: {
+          category: string
+          config: Json | null
+          created_at: string | null
+          description: string | null
+          id: string
+          last_run_at: string | null
+          name: string
+          runs_count: number | null
+          status: string | null
+          total_earned: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          last_run_at?: string | null
+          name: string
+          runs_count?: number | null
+          status?: string | null
+          total_earned?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          last_run_at?: string | null
+          name?: string
+          runs_count?: number | null
+          status?: string | null
+          total_earned?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
