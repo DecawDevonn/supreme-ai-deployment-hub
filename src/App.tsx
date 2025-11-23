@@ -4,6 +4,9 @@ import "./App.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Index from "./pages/Index";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import FilmPage from "./pages/Film";
 import WorkflowManagement from "./pages/WorkflowManagement";
 import DeploymentDashboard from "./pages/DeploymentDashboard";
 import APIManagement from "./pages/APIManagement";
@@ -16,8 +19,8 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import AgentDashboard from "./pages/AgentDashboard";
 import FlowEditor from "./pages/FlowEditor";
-import AgentDemo from "./pages/AgentDemo"; // Import the new AgentDemo page
-import EnhancedAgentDemo from "./pages/EnhancedAgentDemo"; // Enhanced multi-provider platform
+import AgentDemo from "./pages/AgentDemo";
+import EnhancedAgentDemo from "./pages/EnhancedAgentDemo";
 import { Toaster } from "./components/ui/sonner";
 import { ChatProvider } from "./contexts/ChatContext";
 import { ThemeProvider } from 'next-themes';
@@ -37,6 +40,9 @@ function App() {
                 <main className="min-h-screen">
                   <Routes>
                     <Route path="/" element={<Index />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/film" element={<FilmPage />} />
                     <Route path="/deployment" element={<DeploymentDashboard />} />
                     <Route path="/api" element={<APIManagement />} />
                     <Route path="/documentation" element={<Documentation />} />
@@ -44,8 +50,8 @@ function App() {
                     <Route path="/devonn" element={<DevonnDashboard />} />
                     <Route path="/flow" element={<FlowEditor />} />
                     <Route path="/workflows" element={<WorkflowManagement />} />
-                    <Route path="/agent-demo" element={<AgentDemo />} /> {/* Add the new route */}
-                    <Route path="/enhanced-agents" element={<EnhancedAgentDemo />} /> {/* Enhanced multi-LLM platform */}
+                    <Route path="/agent-demo" element={<AgentDemo />} />
+                    <Route path="/enhanced-agents" element={<EnhancedAgentDemo />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/terms" element={<Terms />} />
