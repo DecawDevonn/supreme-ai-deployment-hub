@@ -27,6 +27,7 @@ import { ThemeProvider } from 'next-themes';
 import { DeploymentProvider } from "./contexts/DeploymentContext";
 import { APIProvider } from "./contexts/APIContext";
 import { AGUIProvider } from "./contexts/agui/AGUIContext";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 function App() {
   return (
@@ -41,17 +42,17 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/login" element={<Login />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/film" element={<FilmPage />} />
-                    <Route path="/deployment" element={<DeploymentDashboard />} />
-                    <Route path="/api" element={<APIManagement />} />
+                    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                    <Route path="/film" element={<ProtectedRoute><FilmPage /></ProtectedRoute>} />
+                    <Route path="/deployment" element={<ProtectedRoute><DeploymentDashboard /></ProtectedRoute>} />
+                    <Route path="/api" element={<ProtectedRoute><APIManagement /></ProtectedRoute>} />
                     <Route path="/documentation" element={<Documentation />} />
-                    <Route path="/agents" element={<AgentDashboard />} />
-                    <Route path="/devonn" element={<DevonnDashboard />} />
-                    <Route path="/flow" element={<FlowEditor />} />
-                    <Route path="/workflows" element={<WorkflowManagement />} />
-                    <Route path="/agent-demo" element={<AgentDemo />} />
-                    <Route path="/enhanced-agents" element={<EnhancedAgentDemo />} />
+                    <Route path="/agents" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
+                    <Route path="/devonn" element={<ProtectedRoute><DevonnDashboard /></ProtectedRoute>} />
+                    <Route path="/flow" element={<ProtectedRoute><FlowEditor /></ProtectedRoute>} />
+                    <Route path="/workflows" element={<ProtectedRoute><WorkflowManagement /></ProtectedRoute>} />
+                    <Route path="/agent-demo" element={<ProtectedRoute><AgentDemo /></ProtectedRoute>} />
+                    <Route path="/enhanced-agents" element={<ProtectedRoute><EnhancedAgentDemo /></ProtectedRoute>} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/terms" element={<Terms />} />
