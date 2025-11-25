@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface TypewriterEffectProps {
@@ -20,49 +20,42 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
   delay = 0,
 }) => {
   const [displayText, setDisplayText] = useState("");
-  const [lineIndex, setLineIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-  const [isTyping, setIsTyping] = useState(false);
-  
+  const [isComplete, setIsComplete] = useState(false);
+  const currentIndexRef = useRef(0);
+  const currentLineRef = useRef(0);
   const textLines = Array.isArray(text) ? text : [text];
 
   useEffect(() => {
-    // Initial delay before starting
-    const initialTimer = setTimeout(() => {
-      setIsTyping(true);
-    }, delay);
+    let timeoutId: NodeJS.Timeout;
     
-    return () => clearTimeout(initialTimer);
-  }, [delay]);
-  
-  useEffect(() => {
-    if (!isTyping) return;
-    
-    if (lineIndex < textLines.length) {
-      const currentLine = textLines[lineIndex];
+    const typeNextChar = () => {
+      const currentLine = textLines[currentLineRef.current];
       
-      if (charIndex < currentLine.length) {
-        // Type next character
-        const timer = setTimeout(() => {
-          setDisplayText(prev => prev + currentLine[charIndex]);
-          setCharIndex(charIndex + 1);
-        }, speed);
-        
-        return () => clearTimeout(timer);
-      } else {
-        // Line complete, add newline and move to next line
-        if (lineIndex < textLines.length - 1) {
-          const lineBreakTimer = setTimeout(() => {
-            setDisplayText(prev => prev + "\n");
-            setLineIndex(lineIndex + 1);
-            setCharIndex(0);
-          }, speed * 3); // Longer pause at end of line
-          
-          return () => clearTimeout(lineBreakTimer);
-        }
+      if (!currentLine) {
+        setIsComplete(true);
+        return;
       }
-    }
-  }, [isTyping, charIndex, lineIndex, textLines, speed]);
+      
+      if (currentIndexRef.current < currentLine.length) {
+        setDisplayText(prev => prev + currentLine[currentIndexRef.current]);
+        currentIndexRef.current++;
+        timeoutId = setTimeout(typeNextChar, speed);
+      } else if (currentLineRef.current < textLines.length - 1) {
+        setDisplayText(prev => prev + "\n");
+        currentLineRef.current++;
+        currentIndexRef.current = 0;
+        timeoutId = setTimeout(typeNextChar, speed * 3);
+      } else {
+        setIsComplete(true);
+      }
+    };
+
+    timeoutId = setTimeout(typeNextChar, delay);
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [text, speed, delay]);
   
   // Split the display text by newlines to render multiple lines
   const lines = displayText.split('\n');
