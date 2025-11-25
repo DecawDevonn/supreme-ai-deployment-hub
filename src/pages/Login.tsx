@@ -9,11 +9,21 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
+    // Check if already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         navigate('/dashboard');
       }
     });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        navigate('/dashboard');
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   return (
@@ -50,12 +60,16 @@ const Login = () => {
               },
               className: {
                 container: 'space-y-4',
-                button: 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600',
-                input: 'bg-slate-900/50 border-purple-500/30 text-white',
+                button: 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all',
+                input: 'bg-slate-900/50 border-purple-500/30 text-white placeholder:text-slate-500',
+                anchor: 'text-purple-400 hover:text-purple-300',
+                label: 'text-slate-300',
+                message: 'text-red-400',
               },
             }}
-            providers={[]}
-            view="sign_in"
+            providers={['google']}
+            redirectTo={`${window.location.origin}/dashboard`}
+            socialLayout="horizontal"
           />
         </div>
       </motion.div>
