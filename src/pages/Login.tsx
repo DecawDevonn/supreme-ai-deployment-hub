@@ -9,11 +9,23 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         navigate('/dashboard');
       }
     });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        navigate('/dashboard');
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   return (
@@ -54,8 +66,8 @@ const Login = () => {
                 input: 'bg-slate-900/50 border-purple-500/30 text-white',
               },
             }}
-            providers={[]}
-            view="sign_in"
+            providers={['google']}
+            redirectTo={`${window.location.origin}/dashboard`}
           />
         </div>
       </motion.div>
