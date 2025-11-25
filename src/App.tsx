@@ -21,6 +21,15 @@ import AgentDashboard from "./pages/AgentDashboard";
 import FlowEditor from "./pages/FlowEditor";
 import AgentDemo from "./pages/AgentDemo";
 import EnhancedAgentDemo from "./pages/EnhancedAgentDemo";
+import MoneyHub from "./pages/MoneyHub";
+import Therapy from "./pages/Therapy";
+import Music from "./pages/Music";
+import Sovereignty from "./pages/Sovereignty";
+import PlanetaryChart from "./pages/PlanetaryChart";
+import Backtesting from "./pages/Backtesting";
+import TV from "./pages/TV";
+import Tools from "./pages/Tools";
+import Workflows from "./pages/Workflows";
 import { Toaster } from "./components/ui/sonner";
 import { ChatProvider } from "./contexts/ChatContext";
 import { ThemeProvider } from 'next-themes';
@@ -52,6 +61,15 @@ function App() {
                     <Route path="/workflows" element={<WorkflowManagement />} />
                     <Route path="/agent-demo" element={<AgentDemo />} />
                     <Route path="/enhanced-agents" element={<EnhancedAgentDemo />} />
+                    <Route path="/money-hub" element={<MoneyHub />} />
+                    <Route path="/therapy" element={<Therapy />} />
+                    <Route path="/music" element={<Music />} />
+                    <Route path="/sovereignty" element={<Sovereignty />} />
+                    <Route path="/planetary-chart" element={<PlanetaryChart />} />
+                    <Route path="/backtesting" element={<Backtesting />} />
+                    <Route path="/tv" element={<TV />} />
+                    <Route path="/tools" element={<Tools />} />
+                    <Route path="/devonn-workflows" element={<Workflows />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/terms" element={<Terms />} />
