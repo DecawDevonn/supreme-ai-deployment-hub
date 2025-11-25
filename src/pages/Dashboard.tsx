@@ -44,7 +44,7 @@ const Dashboard = () => {
       description: '100+ earning agents',
       path: '/moneyhub',
       gradient: 'from-green-500 to-emerald-500',
-      available: false,
+      available: true,
     },
     {
       icon: Brain,

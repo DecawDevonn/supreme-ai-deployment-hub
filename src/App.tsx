@@ -7,6 +7,15 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import FilmPage from "./pages/Film";
+import MoneyHub from "./pages/MoneyHub";
+import Therapy from "./pages/Therapy";
+import Sovereignty from "./pages/Sovereignty";
+import PlanetaryChart from "./pages/PlanetaryChart";
+import Music from "./pages/Music";
+import Workflows from "./pages/Workflows";
+import Backtesting from "./pages/Backtesting";
+import TV from "./pages/TV";
+import Tools from "./pages/Tools";
 import WorkflowManagement from "./pages/WorkflowManagement";
 import DeploymentDashboard from "./pages/DeploymentDashboard";
 import APIManagement from "./pages/APIManagement";
@@ -43,13 +52,22 @@ function App() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/film" element={<FilmPage />} />
+                    <Route path="/moneyhub" element={<MoneyHub />} />
+                    <Route path="/therapy" element={<Therapy />} />
+                    <Route path="/sovereignty" element={<Sovereignty />} />
+                    <Route path="/planetary-chart" element={<PlanetaryChart />} />
+                    <Route path="/music" element={<Music />} />
+                    <Route path="/workflows" element={<Workflows />} />
+                    <Route path="/backtesting" element={<Backtesting />} />
+                    <Route path="/tv" element={<TV />} />
+                    <Route path="/tools" element={<Tools />} />
                     <Route path="/deployment" element={<DeploymentDashboard />} />
                     <Route path="/api" element={<APIManagement />} />
                     <Route path="/documentation" element={<Documentation />} />
                     <Route path="/agents" element={<AgentDashboard />} />
                     <Route path="/devonn" element={<DevonnDashboard />} />
                     <Route path="/flow" element={<FlowEditor />} />
-                    <Route path="/workflows" element={<WorkflowManagement />} />
+                    <Route path="/workflow-management" element={<WorkflowManagement />} />
                     <Route path="/agent-demo" element={<AgentDemo />} />
                     <Route path="/enhanced-agents" element={<EnhancedAgentDemo />} />
                     <Route path="/about" element={<About />} />
