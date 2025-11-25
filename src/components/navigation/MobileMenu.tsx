@@ -1,8 +1,9 @@
-
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Bot, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Bot, X, LogIn, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { Session } from '@supabase/supabase-js';
 import { 
   Sheet, 
   SheetContent, 
@@ -10,6 +11,7 @@ import {
   SheetClose 
 } from '@/components/ui/sheet';
 import { NavButton } from './NavButton';
+import { Button } from '@/components/ui/button';
 
 interface MobileMenuProps {
   navigationItems: Array<{ name: string, path: string }>;
@@ -17,6 +19,27 @@ interface MobileMenuProps {
 
 const MobileMenu: React.FC<MobileMenuProps> = ({ navigationItems }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
 
   return (
     <Sheet>
@@ -70,7 +93,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ navigationItems }) => {
             </SheetClose>
           </div>
           
-          <nav className="flex flex-col space-y-4">
+          <nav className="flex flex-col space-y-4 flex-1">
             {navigationItems.map(item => (
               <SheetClose asChild key={item.name}>
                 <Link 
@@ -87,6 +110,32 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ navigationItems }) => {
               </SheetClose>
             ))}
           </nav>
+
+          <div className="pt-4 border-t border-[#00FF41]/20 mt-auto">
+            {session ? (
+              <SheetClose asChild>
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  className="w-full gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
+              </SheetClose>
+            ) : (
+              <SheetClose asChild>
+                <Button
+                  onClick={() => navigate('/login')}
+                  variant="default"
+                  className="w-full gap-2"
+                >
+                  <LogIn className="h-4 w-4" />
+                  Login
+                </Button>
+              </SheetClose>
+            )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>
