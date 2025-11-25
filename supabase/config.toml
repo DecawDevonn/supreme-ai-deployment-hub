@@ -1,1 +1,25 @@
 project_id = "bqkpxdjmpbucenbppxzc"
+
+[functions.generate-screenplay]
+verify_jwt = false
+
+[functions.generate-film]
+verify_jwt = false
+
+[functions.therapy-session]
+verify_jwt = false
+
+[functions.money-agent]
+verify_jwt = false
+
+[functions.sovereignty-legal]
+verify_jwt = false
+
+[functions.astrology-chart]
+verify_jwt = false
+
+[functions.backtest-strategy]
+verify_jwt = false
+
+[functions.generate-content]
+verify_jwt = false
