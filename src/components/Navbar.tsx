@@ -1,10 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Github, Menu, X } from 'lucide-react';
+import { Github, LogIn, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
+import { Session } from '@supabase/supabase-js';
+import { Button } from '@/components/ui/button';
 
 import Logo from './navigation/Logo';
 import DesktopNav from './navigation/DesktopNav';
@@ -22,10 +24,12 @@ const Navbar = ({
   transparent = false 
 }: NavbarProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isScrolled, setIsScrolled] = useState(false);
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const [visible, setVisible] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
   
   useEffect(() => {
     const handleScroll = () => {
@@ -55,6 +59,25 @@ const Navbar = ({
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [prevScrollPos]);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
 
   return (
     <AnimatePresence>
@@ -91,6 +114,28 @@ const Navbar = ({
               >
                 <Github className="h-5 w-5" />
               </a>
+              
+              {session ? (
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {!isMobile && 'Logout'}
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => navigate('/login')}
+                  variant="default"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <LogIn className="h-4 w-4" />
+                  {!isMobile && 'Login'}
+                </Button>
+              )}
               
               {/* Mobile menu */}
               {isMobile && (
