@@ -1,1 +1,19 @@
 project_id = "bqkpxdjmpbucenbppxzc"
+
+[functions.generate-screenplay]
+verify_jwt = false
+
+[functions.generate-film]
+verify_jwt = false
+
+[functions.generate-storyboard]
+verify_jwt = false
+
+[functions.generate-video-clips]
+verify_jwt = false
+
+[functions.generate-voiceover]
+verify_jwt = false
+
+[functions.generate-music]
+verify_jwt = false
