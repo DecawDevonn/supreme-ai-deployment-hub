@@ -1,9 +1,9 @@
 
 export const navigationItems = [
   { name: 'Home', path: '/' },
-  { name: 'Documentation', path: '/documentation' },
-  { name: 'Deployment', path: '/deployment' },
+  { name: 'Film', path: '/film' },
+  { name: 'MoneyHub', path: '/moneyhub' },
   { name: 'Workflows', path: '/workflows' },
-  { name: 'API', path: '/api' },
+  { name: 'Documentation', path: '/documentation' },
   { name: 'About', path: '/about' },
 ];

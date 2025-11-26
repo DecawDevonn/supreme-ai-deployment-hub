@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import FilmPage from "./pages/Film";
+import MoneyHub from "./pages/MoneyHub";
 import WorkflowManagement from "./pages/WorkflowManagement";
 import DeploymentDashboard from "./pages/DeploymentDashboard";
 import APIManagement from "./pages/APIManagement";
@@ -43,6 +44,7 @@ function App() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/film" element={<FilmPage />} />
+                    <Route path="/moneyhub" element={<MoneyHub />} />
                     <Route path="/deployment" element={<DeploymentDashboard />} />
                     <Route path="/api" element={<APIManagement />} />
                     <Route path="/documentation" element={<Documentation />} />
