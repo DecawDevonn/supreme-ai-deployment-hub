@@ -21,6 +21,9 @@ import AgentDashboard from "./pages/AgentDashboard";
 import FlowEditor from "./pages/FlowEditor";
 import AgentDemo from "./pages/AgentDemo";
 import EnhancedAgentDemo from "./pages/EnhancedAgentDemo";
+import MoneyHub from "./pages/MoneyHub";
+import Therapy from "./pages/Therapy";
+import Jarvis from "./pages/Jarvis";
 import { Toaster } from "./components/ui/sonner";
 import { ChatProvider } from "./contexts/ChatContext";
 import { ThemeProvider } from 'next-themes';
@@ -52,6 +55,9 @@ function App() {
                     <Route path="/workflows" element={<WorkflowManagement />} />
                     <Route path="/agent-demo" element={<AgentDemo />} />
                     <Route path="/enhanced-agents" element={<EnhancedAgentDemo />} />
+                    <Route path="/moneyhub" element={<MoneyHub />} />
+                    <Route path="/therapy" element={<Therapy />} />
+                    <Route path="/jarvis" element={<Jarvis />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/terms" element={<Terms />} />
