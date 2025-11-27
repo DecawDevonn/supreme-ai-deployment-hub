@@ -64,17 +64,28 @@ export const useCloudCredentials = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Encrypt credentials as JSON string
-      const credentialsJson = JSON.stringify({
+      // Use secure server-side encryption via edge function
+      const credentialsJson = {
         accessKeyId: input.accessKeyId,
         secretAccessKey: input.secretAccessKey,
         region: input.region,
-      });
+      };
 
-      // Convert to base64 for storage
-      const encoder = new TextEncoder();
-      const credentialsBytes = encoder.encode(credentialsJson);
-      const base64Credentials = btoa(String.fromCharCode(...credentialsBytes));
+      const { data: encryptionResult, error: encryptError } = await supabase.functions.invoke(
+        'cloud-credentials-encrypt',
+        {
+          body: {
+            action: 'encrypt',
+            credentials: credentialsJson,
+          },
+        }
+      );
+
+      if (encryptError || !encryptionResult?.encrypted) {
+        throw new Error('Failed to encrypt credentials securely');
+      }
+
+      const encryptedCredentials = encryptionResult.encrypted;
 
       // First, deactivate any existing AWS credentials
       await supabase
@@ -89,7 +100,7 @@ export const useCloudCredentials = () => {
         .insert([{
           user_id: user.id,
           provider: 'aws',
-          credentials: base64Credentials,
+          credentials: encryptedCredentials,
           region: input.region,
           is_active: true,
         }])
