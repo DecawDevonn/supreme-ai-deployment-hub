@@ -13,9 +13,10 @@ _api_keys_cache: Dict[str, str] = {}
 # Path to encrypted keys storage
 KEYS_FILE = os.environ.get("KEYS_FILE", "secrets/encrypted_keys.json")
 
-# Encryption key - in production this would come from environment or secure storage
-# For demo purposes, we're using a fixed key - CHANGE THIS IN PRODUCTION!
-_ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY", "RV8z7o1i8Xm9uKL5KzUdN-j6G5DD99wgYDkynlHECZY=")
+# Encryption key - must be provided via environment variable
+_ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY")
+if not _ENCRYPTION_KEY:
+    raise RuntimeError("ENCRYPTION_KEY environment variable must be set")
 
 def _get_cipher():
     """Get the encryption cipher"""
