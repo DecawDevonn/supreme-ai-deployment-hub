@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { toast } from 'sonner';
 import { APIConfig, NewAPIConfig } from '@/types/api';
 import { encrypt, decrypt } from '@/utils/encryption';
+import { logAuditEvent, AuditEventTypes } from '@/utils/auditLogger';
 
 interface APIContextType {
   apiConfigs: APIConfig[];
@@ -76,6 +77,14 @@ export const APIProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       };
       
       toast.success(`Added API configuration for ${config.name}`);
+      
+      // Securely log the event server-side
+      logAuditEvent(AuditEventTypes.API_CONNECTION_ADDED, {
+        api_name: config.name,
+        endpoint: config.endpoint,
+        has_api_key: !!config.apiKey
+      });
+      
       return [...prev, newConfig];
     });
   };
@@ -85,6 +94,11 @@ export const APIProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const newConfigs = prev.filter(c => c.name !== name);
       if (newConfigs.length < prev.length) {
         toast.info(`Removed API configuration for ${name}`);
+        
+        // Securely log the removal
+        logAuditEvent(AuditEventTypes.API_CONNECTION_REMOVED, {
+          api_name: name
+        });
       }
       return newConfigs;
     });
@@ -125,8 +139,17 @@ export const APIProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       
       if (isConnected) {
         toast.success(`Successfully connected to ${name} API`);
+        logAuditEvent(AuditEventTypes.API_CONNECTION_TEST_SUCCESS, {
+          api_name: name,
+          endpoint: config.endpoint
+        });
       } else {
         toast.error(`Failed to connect to ${name} API. Status: ${response.status}`);
+        logAuditEvent(AuditEventTypes.API_CONNECTION_TEST_FAILED, {
+          api_name: name,
+          endpoint: config.endpoint,
+          status_code: response.status
+        });
       }
       
       return isConnected;
@@ -159,6 +182,11 @@ export const APIProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       c.name === name ? { ...c, apiKey: newKey } : c
     ));
     toast.success(`API key for ${name} has been updated`);
+    
+    // Securely log the key update (not the actual key)
+    logAuditEvent(AuditEventTypes.API_KEY_UPDATED, {
+      api_name: name
+    });
   };
   
   const isAnyAPIConnected = apiConfigs.some(c => c.isConnected);
