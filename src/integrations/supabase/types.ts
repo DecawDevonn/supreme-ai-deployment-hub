@@ -91,6 +91,30 @@ export type Database = {
         }
         Relationships: []
       }
+      api_usage_logs: {
+        Row: {
+          details: Json | null
+          event_timestamp: string | null
+          event_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          details?: Json | null
+          event_timestamp?: string | null
+          event_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          details?: Json | null
+          event_timestamp?: string | null
+          event_type?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -970,6 +994,10 @@ export type Database = {
         Returns: string
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      log_api_usage: {
+        Args: { details_in: Json; event_type_in: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
