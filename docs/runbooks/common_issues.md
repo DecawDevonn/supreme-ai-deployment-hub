@@ -525,3 +525,44 @@ This runbook provides step-by-step instructions for resolving common issues in t
    # Update state to match
    terraform apply -var-file=environments/production.tfvars
    ```
+
+---
+
+## Credential Leak or Secret Exposure
+
+### Symptom: Secret scanning alert or discovered credential in repository
+
+#### Immediate Actions:
+
+1. **DO NOT** commit a new change to remove the secret
+2. **Immediately** revoke/disable the exposed credential
+3. Follow the [Credential Leak Migration Checklist](./credential_leak_migration.md)
+
+#### Quick Response:
+
+```bash
+# 1. Disable AWS credentials immediately
+aws iam delete-access-key --user-name [username] --access-key-id [exposed-key]
+
+# 2. Scan repository history
+gitleaks detect --source . --log-opts="--all" --verbose
+
+# 3. Notify security team
+# Email: security@devonn.ai
+```
+
+#### Related Documentation:
+
+- [Credential Leak Migration Checklist](./credential_leak_migration.md) - Complete remediation procedures
+- [Secret Scanning Setup](./secret_scanning_setup.md) - Prevention and detection tools
+- [SECURITY.md](../../SECURITY.md) - Security policies
+
+---
+
+## See Also
+
+- [Operational Procedures](../OPERATIONAL_PROCEDURES.md)
+- [Disaster Recovery Plan](../DISASTER_RECOVERY_PLAN.md)
+- [Credential Leak Migration Checklist](./credential_leak_migration.md)
+- [Secret Scanning Setup Guide](./secret_scanning_setup.md)
+

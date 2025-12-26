@@ -61,6 +61,8 @@ Devonn.AI implements these security measures:
 3. **Code Security**
    - Static code analysis in CI/CD pipeline
    - Dependency vulnerability scanning
+   - Automated secret scanning (GitHub, Gitleaks, CodeQL)
+   - Pre-commit hooks for local secret detection
    - Regular penetration testing
    - Secure development practices training
 
@@ -90,6 +92,54 @@ For vulnerabilities in third-party dependencies:
 2. We use automated tools to identify vulnerabilities in the dependency graph
 3. We promptly update dependencies with security patches
 4. We maintain a Software Bill of Materials (SBOM) for our applications
+
+## Credential Leak Response
+
+If you discover or suspect a credential leak in the repository:
+
+1. **DO NOT** attempt to fix it by committing a new change that removes the secret
+2. **Immediately** notify the security team at security@devonn.ai
+3. Follow our [Credential Leak Migration Checklist](docs/runbooks/credential_leak_migration.md) for step-by-step remediation procedures
+
+For more information on preventing credential leaks, see our [Secret Scanning Setup Guide](docs/runbooks/secret_scanning_setup.md).
+
+## Automated Secret Scanning
+
+This repository uses multiple automated tools to detect accidentally committed secrets:
+
+- **GitHub Secret Scanning**: Automatically scans repository for known secret patterns
+- **GitHub Push Protection**: Blocks commits containing detected secrets (when enabled)
+- **Gitleaks**: Comprehensive secret detection in CI/CD and pre-commit hooks
+- **CodeQL**: Security vulnerability analysis including credential exposure
+
+### Enabling Secret Scanning
+
+For detailed instructions on verifying and configuring secret scanning tools, see:
+- [Secret Scanning Setup Guide](docs/runbooks/secret_scanning_setup.md)
+
+**Quick verification** (for repository administrators):
+
+1. Navigate to repository **Settings** → **Code security and analysis**
+2. Verify the following are enabled:
+   - ✅ **Secret scanning** (auto-enabled for public repos)
+   - ✅ **Push protection** (recommended)
+3. Check the **Security** tab for any existing alerts
+
+**For developers**: Ensure you have pre-commit hooks installed to catch secrets before they reach the repository:
+
+```bash
+# Install dependencies (includes Husky hooks)
+npm install
+
+# Verify Gitleaks is installed
+gitleaks version
+
+# Test the pre-commit hook
+echo "test_secret=AKIAIOSFODNN7EXAMPLE" > test.txt
+git add test.txt
+git commit -m "test"  # Should be blocked
+rm test.txt
+```
 
 ## Security Contacts
 

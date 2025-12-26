@@ -94,8 +94,23 @@ curl -X GET "http://localhost:8000/admin/keys" \
 ## Security Notes
 
 - In production, use proper secret management (AWS Secrets Manager, HashiCorp Vault, etc.)
+- **Never commit secrets or credentials to the repository**
 - Rotate the JWT and encryption keys regularly
 - Set up proper CORS restrictions for production environments
+- Enable and monitor secret scanning (see [SECURITY.md](SECURITY.md))
+
+### For Contributors
+
+Before making your first commit:
+
+1. Install Gitleaks: `brew install gitleaks` (or see [CONTRIBUTING.md](CONTRIBUTING.md))
+2. Pre-commit hooks are automatically installed via `npm install`
+3. See our [Secret Scanning Setup Guide](docs/runbooks/secret_scanning_setup.md)
+
+For more security information:
+- [SECURITY.md](SECURITY.md) - Security policies and reporting
+- [Secret Scanning Setup](docs/runbooks/secret_scanning_setup.md) - Automated secret detection
+- [Credential Leak Response](docs/runbooks/credential_leak_migration.md) - Emergency procedures
 
 ## License
 

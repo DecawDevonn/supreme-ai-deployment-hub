@@ -1,0 +1,128 @@
+title = "Devonn.AI Gitleaks Configuration"
+
+[extend]
+# Use default gitleaks rules
+useDefault = true
+
+[[rules]]
+id = "devonn-api-key"
+description = "Detected Devonn API Key"
+regex = '''devonn_[a-z0-9]{32}'''
+tags = ["key", "devonn"]
+
+[[rules]]
+id = "jwt-secret"
+description = "Detected JWT Secret"
+regex = '''(?i)jwt[_-]?secret[_-]?(?:key)?[_-]?(?:=|:)[_-]?[\"']?([a-zA-Z0-9_-]{40,})[\"']?'''
+tags = ["jwt", "secret"]
+
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key"
+regex = '''sk-[a-zA-Z0-9]{48}'''
+tags = ["api-key", "openai"]
+
+[[rules]]
+id = "huggingface-token"
+description = "Hugging Face Token"
+regex = '''hf_[a-zA-Z0-9]{32,}'''
+tags = ["api-key", "huggingface"]
+
+[[rules]]
+id = "elevenlabs-api-key"
+description = "ElevenLabs API Key"
+regex = '''[0-9a-f]{32}'''
+tags = ["api-key", "elevenlabs"]
+# Note: This pattern is broad, consider path restrictions
+[rules.allowlist]
+paths = [
+  '''node_modules/''',
+  '''package-lock.json''',
+  '''bun.lockb'''
+]
+
+[[rules]]
+id = "aws-access-key"
+description = "AWS Access Key ID"
+regex = '''(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+tags = ["aws", "access-key"]
+
+[[rules]]
+id = "generic-high-entropy"
+description = "Generic high-entropy string (potential secret)"
+regex = '''[a-zA-Z0-9+/]{40,}={0,2}'''
+entropy = 4.5
+tags = ["entropy"]
+[rules.allowlist]
+paths = [
+  '''package-lock.json''',
+  '''bun.lockb''',
+  '''*.min.js''',
+  '''dist/'''
+]
+
+[[rules]]
+id = "supabase-service-role"
+description = "Supabase Service Role Key"
+regex = '''eyJ[a-zA-Z0-9_-]{20,}\.eyJ[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}'''
+tags = ["supabase", "jwt", "service-role"]
+
+[[rules]]
+id = "database-connection-string"
+description = "Database connection string with credentials"
+regex = '''(?i)(postgres|mysql|mongodb):\/\/[a-z0-9_-]+:[^@\s]+@[a-z0-9.-]+:[0-9]+\/[a-z0-9_-]+'''
+tags = ["database", "connection-string"]
+
+# Allowlist for known false positives
+[allowlist]
+description = "Allowlisted files and patterns"
+paths = [
+  '''.git/''',
+  '''node_modules/''',
+  '''dist/''',
+  '''build/''',
+  '''coverage/''',
+  '''*.test.ts''',
+  '''*.test.js''',
+  '''*.spec.ts''',
+  '''*.spec.js''',
+  '''test-results/''',
+  '''playwright-report/''',
+  '''.env.example''',
+  '''README.md''',
+  '''README-*.md''',
+  '''docs/runbooks/credential_leak_migration.md''',
+  '''docs/runbooks/secret_scanning_setup.md''',
+  '''package-lock.json''',
+  '''bun.lockb''',
+  '''*.min.js''',
+  '''*.map'''
+]
+
+regexes = [
+  # Example placeholders
+  '''(?i)example''',
+  '''(?i)placeholder''',
+  '''(?i)your[-_]?api[-_]?key[-_]?here''',
+  '''(?i)replace[-_]?with''',
+  '''(?i)dummy''',
+  '''(?i)test[-_]?key''',
+  '''(?i)fake[-_]?key''',
+  '''(?i)sample''',
+  '''(?i)<your[-_]''',
+  '''(?i)your[-_][a-z]+[-_]here''',
+  # Documentation examples
+  '''AKIAIOSFODNN7EXAMPLE''',
+  '''sk-abcd1234efgh5678ijkl''',
+  '''hf_example''',
+  # Base64 encoded test strings
+  '''VGVzdFN0cmluZw==''',
+  # Common test values
+  '''sk-test-''',
+  '''pk_test_''',
+]
+
+# Specific commits to ignore (after verified remediation)
+commits = [
+  # Add commit SHAs that were cleaned/verified
+]
