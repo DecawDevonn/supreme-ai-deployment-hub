@@ -64,51 +64,36 @@ export const useCloudCredentials = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Encrypt credentials as JSON string
-      const credentialsJson = JSON.stringify({
+      // Prepare credentials as JSON for secure server-side encryption
+      const credentialsJson = {
         accessKeyId: input.accessKeyId,
         secretAccessKey: input.secretAccessKey,
         region: input.region,
+      };
+
+      // Use edge function for secure credential storage with server-side encryption
+      const { data: encryptedData, error: encryptError } = await supabase.functions.invoke('secure-credentials', {
+        body: { 
+          action: 'store',
+          provider: 'aws',
+          credentials: credentialsJson,
+          region: input.region,
+        },
       });
 
-      // Convert to base64 for storage
-      const encoder = new TextEncoder();
-      const credentialsBytes = encoder.encode(credentialsJson);
-      const base64Credentials = btoa(String.fromCharCode(...credentialsBytes));
+      if (encryptError) throw encryptError;
 
-      // First, deactivate any existing AWS credentials
-      await supabase
-        .from('cloud_credentials')
-        .update({ is_active: false })
-        .eq('user_id', user.id)
-        .eq('provider', 'aws');
-
-      // Insert new credentials
-      const { data, error } = await supabase
-        .from('cloud_credentials')
-        .insert([{
-          user_id: user.id,
+      if (encryptedData?.success) {
+        const cred: CloudCredentials = {
+          id: encryptedData.id,
           provider: 'aws',
-          credentials: base64Credentials,
           region: input.region,
           is_active: true,
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        const cred: CloudCredentials = {
-          id: data.id,
-          provider: 'aws',
-          region: data.region || '',
-          is_active: data.is_active,
-          last_validated_at: data.last_validated_at,
-          created_at: data.created_at,
+          last_validated_at: null,
+          created_at: new Date().toISOString(),
         };
         setCredentials(cred);
-        toast.success('AWS credentials saved successfully');
+        toast.success('AWS credentials saved securely');
         
         // Validate credentials
         await validateCredentials('aws');
