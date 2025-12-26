@@ -235,7 +235,7 @@ gitleaks version
 docker pull zricethezav/gitleaks:latest
 
 # Run scan
-docker run -v ${pwd}:/path zricethezav/gitleaks:latest detect --source="/path" -v
+docker run -v $(pwd):/path zricethezav/gitleaks:latest detect --source="/path" -v
 ```
 
 ### Configuration File
@@ -278,8 +278,15 @@ id = "elevenlabs-api-key"
 description = "ElevenLabs API Key"
 regex = '''[0-9a-f]{32}'''
 tags = ["api-key", "elevenlabs"]
-# Note: Add path restriction to avoid false positives
-paths = ['''.env''', '''config/''']
+# Note: This pattern is broad; requires path context to reduce false positives
+[rules.allowlist]
+paths = [
+  '''node_modules/''',
+  '''package-lock.json''',
+  '''bun.lockb''',
+  '''dist/''',
+  '''build/'''
+]
 
 [[rules]]
 id = "aws-access-key"
@@ -291,7 +298,7 @@ tags = ["aws", "access-key"]
 id = "generic-high-entropy"
 description = "Generic high-entropy string (potential secret)"
 regex = '''[a-zA-Z0-9+/]{40,}={0,2}'''
-entropy = 4.5
+entropy = 5.0
 tags = ["entropy"]
 
 # Allowlist for known false positives
