@@ -1,4 +1,4 @@
-/* Devonn.ai Matrix Premium Design System v1.0.0 */
+/* Devonn.ai Matrix Premium Design System v1.0.0 - Luxury Matrix */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
@@ -7,18 +7,24 @@
 
 @layer base {
   :root {
-    /* === NEUTRAL BACKGROUNDS === */
-    --background: 215 43% 5%;
-    --bg-1: 217 45% 8%;
-    --bg-2: 217 50% 12%;
+    /* === NEUTRAL BACKGROUNDS (Luxury Matrix Dark) === */
+    --background: 215 50% 4%;          /* #070A0F */
+    --bg-0: 215 50% 4%;                /* #070A0F */
+    --bg-1: 217 45% 8%;                /* #0B1220 */
+    --bg-2: 217 50% 12%;               /* #0F1A2E */
     
     /* === SURFACES === */
-    --surface-1: 216 46% 10%;
-    --surface-2: 217 51% 13%;
-    --surface-3: 224 54% 18%;
+    --surface-1: 216 46% 10%;          /* #0E1626 */
+    --surface-2: 217 51% 13%;          /* #111C33 */
+    --surface-3: 224 54% 18%;          /* #152247 */
     
     /* === FOREGROUND TEXT === */
     --foreground: 0 0% 100%;
+    --text-primary: 0 0% 100% / 0.92;
+    --text-secondary: 0 0% 100% / 0.72;
+    --text-muted: 0 0% 100% / 0.56;
+    --text-disabled: 0 0% 100% / 0.38;
+    --text-inverse: 217 45% 8%;
     
     /* === CARD === */
     --card: 216 46% 10%;
@@ -28,15 +34,17 @@
     --popover: 217 51% 13%;
     --popover-foreground: 0 0% 100%;
     
-    /* === PRIMARY (ACCENT GREEN) === */
-    --primary: 142 100% 62%;
+    /* === PRIMARY (ACCENT GREEN - Luxury Matrix) === */
+    --primary: 142 100% 62%;           /* #3BFF7A */
     --primary-foreground: 217 45% 8%;
     
-    /* === ACCENT === */
-    --accent: 142 100% 62%;
+    /* === ACCENT (Controlled neon green) === */
+    --accent: 142 100% 62%;            /* #3BFF7A */
     --accent-foreground: 217 45% 8%;
-    --accent-hover: 142 85% 54%;
-    --accent-active: 142 75% 47%;
+    --accent-hover: 142 85% 54%;       /* #2BE96A */
+    --accent-active: 142 75% 47%;      /* #1ED25A */
+    --accent-subtle-bg: 142 100% 62% / 0.10;
+    --accent-subtle-border: 142 100% 62% / 0.22;
     
     /* === SECONDARY === */
     --secondary: 217 51% 13%;
@@ -47,22 +55,28 @@
     --muted-foreground: 0 0% 72%;
     
     /* === DESTRUCTIVE === */
-    --destructive: 350 100% 69%;
+    --destructive: 350 100% 69%;       /* #FF5C7A */
     --destructive-foreground: 0 0% 100%;
     
-    /* === BORDERS === */
-    --border: 0 0% 50%;
-    --input: 0 0% 50%;
+    /* === BORDERS (subtle, not harsh) === */
+    --border: 0 0% 100% / 0.12;
+    --border-subtle: 0 0% 100% / 0.08;
+    --border-default: 0 0% 100% / 0.12;
+    --border-strong: 0 0% 100% / 0.18;
+    --input: 0 0% 100% / 0.12;
     --ring: 142 100% 62%;
     
     /* === STATUS COLORS === */
-    --status-success: 142 100% 62%;
-    --status-warning: 43 100% 69%;
-    --status-danger: 350 100% 69%;
-    --status-info: 199 100% 69%;
+    --status-success: 142 100% 62%;    /* #3BFF7A */
+    --status-warning: 43 100% 69%;     /* #FFD45C */
+    --status-danger: 350 100% 69%;     /* #FF5C7A */
+    --status-info: 199 100% 69%;       /* #5CC8FF */
     
-    /* === RADIUS === */
+    /* === RADIUS (8pt grid aligned) === */
     --radius: 12px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
     
     /* === SIDEBAR === */
     --sidebar-background: 217 45% 8%;
@@ -71,7 +85,7 @@
     --sidebar-primary-foreground: 217 45% 8%;
     --sidebar-accent: 217 51% 13%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 50%;
+    --sidebar-border: 0 0% 100% / 0.12;
     --sidebar-ring: 142 100% 62%;
   }
 
@@ -126,12 +140,27 @@
     @apply border-border;
   }
 
-  body {
+  html, body {
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* === SCROLLBAR === */
+  ::selection {
+    background: hsl(142 100% 62% / 0.22);
+  }
+
+  a {
+    @apply text-foreground transition-colors;
+  }
+  
+  a:hover {
+    color: hsl(var(--accent));
+  }
+
+  /* === SCROLLBAR (Premium subtle) === */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -142,16 +171,48 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-foreground/10 rounded-full;
+    @apply rounded-full;
+    background: hsl(var(--foreground) / 0.10);
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-foreground/15;
+    background: hsl(var(--foreground) / 0.15);
   }
 
-  /* === FOCUS STATES === */
+  /* === FOCUS STATES (Accessible) === */
   :focus-visible {
-    @apply outline-none ring-2 ring-ring/25;
+    @apply outline-none;
+    box-shadow: 0 0 0 3px hsl(142 100% 62% / 0.25);
+  }
+
+  /* === TYPOGRAPHY SCALE === */
+  h1 {
+    @apply text-5xl font-bold leading-tight tracking-tight;
+    letter-spacing: -0.02em;
+  }
+  
+  h2 {
+    @apply text-4xl font-bold leading-tight tracking-tight;
+    letter-spacing: -0.02em;
+  }
+  
+  h3 {
+    @apply text-3xl font-bold leading-snug;
+    letter-spacing: -0.015em;
+  }
+  
+  h4 {
+    @apply text-2xl font-semibold leading-snug;
+    letter-spacing: -0.01em;
+  }
+  
+  h5 {
+    @apply text-xl font-semibold leading-relaxed;
+    letter-spacing: -0.005em;
+  }
+  
+  h6 {
+    @apply text-base font-semibold leading-relaxed;
   }
 }
 
@@ -169,47 +230,91 @@
     background-color: hsl(var(--surface-3));
   }
   
-  /* === MATRIX CARD === */
+  /* === MATRIX CARD (Premium styling) === */
   .matrix-card {
-    @apply surface-1 backdrop-blur-md border border-border/20 rounded-md;
+    @apply surface-1 backdrop-blur-md rounded-xl;
+    border: 1px solid hsl(var(--border-subtle));
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    padding: 24px;
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .matrix-card:hover {
     box-shadow: 0 16px 44px rgba(0, 0, 0, 0.55);
     transform: translateY(-2px);
-    @apply border-border/30;
+    border-color: hsl(var(--border-default));
+  }
+
+  /* === HERO BACKGROUND (Luxury Matrix) === */
+  .devonn-hero-bg {
+    background:
+      radial-gradient(1200px circle at 20% 10%, hsl(142 100% 62% / 0.18), transparent 55%),
+      radial-gradient(1000px circle at 80% 0%, hsl(199 100% 69% / 0.12), transparent 50%),
+      linear-gradient(180deg, hsl(0 0% 100% / 0.04), hsl(0 0% 100% / 0)),
+      hsl(var(--bg-0));
   }
 
   /* === GLASS EFFECT === */
   .glass {
-    @apply surface-1 bg-opacity-60 backdrop-blur-lg border border-border/20;
+    @apply surface-1 backdrop-blur-lg;
+    background-color: hsl(var(--surface-1) / 0.60);
+    border: 1px solid hsl(var(--border-subtle));
   }
 
   /* === ACCENT UTILITIES === */
   .accent-subtle-bg {
-    background-color: hsl(var(--accent) / 0.10);
+    background-color: hsl(142 100% 62% / 0.10);
   }
   
   .accent-subtle-border {
-    border-color: hsl(var(--accent) / 0.22);
+    border-color: hsl(142 100% 62% / 0.22);
   }
 
   /* === STATUS BACKGROUNDS === */
   .status-success-bg {
-    background-color: hsl(var(--status-success) / 0.12);
+    background-color: hsl(142 100% 62% / 0.12);
   }
   
   .status-warning-bg {
-    background-color: hsl(var(--status-warning) / 0.12);
+    background-color: hsl(43 100% 69% / 0.12);
   }
   
   .status-danger-bg {
-    background-color: hsl(var(--status-danger) / 0.12);
+    background-color: hsl(350 100% 69% / 0.12);
   }
   
   .status-info-bg {
-    background-color: hsl(var(--status-info) / 0.12);
+    background-color: hsl(199 100% 69% / 0.12);
+  }
+
+  /* === SECTION SPACING (8pt grid) === */
+  .section-default {
+    @apply py-18;
+  }
+  
+  .section-relaxed {
+    @apply py-24;
+  }
+  
+  .section-hero {
+    @apply py-28;
+  }
+  
+  /* === CONTAINER WIDTHS === */
+  .container-narrow {
+    max-width: 960px;
+  }
+  
+  .container-default {
+    max-width: 1200px;
+  }
+  
+  .container-wide {
+    max-width: 1320px;
+  }
+  
+  .paragraph-width {
+    max-width: 720px;
   }
 }
 
@@ -217,16 +322,16 @@
   /* === HERO OVERLAY GRADIENT === */
   .hero-overlay {
     background: 
-      radial-gradient(1200px circle at 20% 10%, hsl(var(--accent) / 0.18), transparent 55%),
-      radial-gradient(1000px circle at 80% 0%, hsl(var(--status-info) / 0.12), transparent 50%);
+      radial-gradient(1200px circle at 20% 10%, hsl(142 100% 62% / 0.18), transparent 55%),
+      radial-gradient(1000px circle at 80% 0%, hsl(199 100% 69% / 0.12), transparent 50%);
   }
   
   /* === SURFACE SHEEN === */
   .surface-sheen {
-    background: linear-gradient(180deg, hsl(var(--foreground) / 0.06), transparent);
+    background: linear-gradient(180deg, hsl(0 0% 100% / 0.06), transparent);
   }
 
-  /* === SHADOWS === */
+  /* === SHADOWS (Premium depth) === */
   .shadow-card-soft {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   }
@@ -236,7 +341,7 @@
   }
   
   .shadow-focus-glow {
-    box-shadow: 0 0 0 3px hsl(var(--accent) / 0.25);
+    box-shadow: 0 0 0 3px hsl(142 100% 62% / 0.25);
   }
   
   .shadow-modal {
@@ -245,6 +350,10 @@
   
   .shadow-toast {
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  }
+  
+  .shadow-accent-glow {
+    box-shadow: 0 0 20px hsl(142 100% 62% / 0.6);
   }
 
   /* === MICRO INTERACTIONS === */
@@ -256,9 +365,21 @@
     transform: translateY(-2px);
   }
 
-  /* === TEXT BALANCE === */
+  /* === TEXT UTILITIES === */
   .text-balance {
     text-wrap: balance;
+  }
+  
+  .text-primary-opacity {
+    color: hsl(0 0% 100% / 0.92);
+  }
+  
+  .text-secondary-opacity {
+    color: hsl(0 0% 100% / 0.72);
+  }
+  
+  .text-muted-opacity {
+    color: hsl(0 0% 100% / 0.56);
   }
 
   /* === TRANSITION UTILITIES === */
@@ -269,9 +390,24 @@
   .transition-fast {
     transition: all 150ms cubic-bezier(0.4, 0.0, 0.2, 1.0);
   }
+  
+  .transition-base {
+    transition: all 200ms cubic-bezier(0.4, 0.0, 0.2, 1.0);
+  }
+
+  /* === NAV ACTIVE INDICATOR === */
+  .nav-active-indicator {
+    @apply relative;
+  }
+  
+  .nav-active-indicator::after {
+    content: '';
+    @apply absolute bottom-0 left-0 right-0 h-0.5 rounded-sm;
+    background-color: hsl(var(--accent));
+  }
 }
 
-/* === REDUCED MOTION === */
+/* === REDUCED MOTION (Accessibility) === */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -279,5 +415,6 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
