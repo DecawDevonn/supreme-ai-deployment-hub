@@ -108,9 +108,35 @@ jobs:
           name: devonn-ai-development-extension
           path: ./artifacts
      
-      - name: Setup Chrome
-        uses: browser-actions/setup-chrome@latest
-       
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v1
+        id: setup-chrome
+     
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            xvfb \
+            libnss3 \
+            libatk1.0-0 \
+            libatk-bridge2.0-0 \
+            libcups2 \
+            libdrm2 \
+            libxkbcommon0 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxfixes3 \
+            libxrandr2 \
+            libgbm1 \
+            libasound2 \
+            libpango-1.0-0 \
+            libcairo2
+     
+      - name: Verify Chrome installation
+        run: |
+          echo "Chrome Path: ${{ steps.setup-chrome.outputs.chrome-path }}"
+          ${{ steps.setup-chrome.outputs.chrome-path }} --version
+     
       - name: Extract extension
         run: |
           mkdir -p ./extension
@@ -125,9 +151,9 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Run integration tests with xvfb
+        env:
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
         run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb
           xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" \
             node scripts/run-integration-tests.cjs \
               --extension-path=./extension \

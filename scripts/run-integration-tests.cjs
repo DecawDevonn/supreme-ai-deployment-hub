@@ -131,8 +131,21 @@ async function runTests() {
 
   try {
     console.log('Launching browser with extension...');
+    
+    // Get Chrome path from environment variable (set by setup-chrome action in CI)
+    const executablePath = process.env.CHROME_PATH || undefined;
+    
+    if (executablePath) {
+      console.log(`Using Chrome from: ${executablePath}`);
+    } else {
+      console.log('Using Puppeteer bundled Chromium');
+    }
+    
     browser = await puppeteer.launch({
       headless: false,
+      executablePath: executablePath,
+      timeout: 60000, // Increase timeout to 60 seconds
+      protocolTimeout: 60000, // Increase protocol timeout to 60 seconds
       args: [
         `--disable-extensions-except=${path.resolve(argv['extension-path'])}`,
         `--load-extension=${path.resolve(argv['extension-path'])}`,
