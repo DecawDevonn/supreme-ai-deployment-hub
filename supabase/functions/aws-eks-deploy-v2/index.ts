@@ -1,11 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-// AWS SDK v3 for Deno - using esm.sh
-import { EKSClient, CreateClusterCommand, DescribeClusterCommand, ListClustersCommand, DeleteClusterCommand } from "https://esm.sh/@aws-sdk/client-eks@3.790.0"
-import { EC2Client, DescribeVpcsCommand, DescribeSubnetsCommand } from "https://esm.sh/@aws-sdk/client-ec2@3.790.0"
-import { IAMClient, CreateRoleCommand, AttachRolePolicyCommand, GetRoleCommand } from "https://esm.sh/@aws-sdk/client-iam@3.790.0"
-import { STSClient, GetCallerIdentityCommand } from "https://esm.sh/@aws-sdk/client-sts@3.790.0"
+// AWS SDK v3 for Deno - using npm: specifiers (more stable than esm.sh)
+import { EKSClient, CreateClusterCommand, DescribeClusterCommand, ListClustersCommand, DeleteClusterCommand } from "npm:@aws-sdk/client-eks@^3.700.0"
+import { EC2Client, DescribeVpcsCommand, DescribeSubnetsCommand } from "npm:@aws-sdk/client-ec2@^3.700.0"
+import { IAMClient, CreateRoleCommand, AttachRolePolicyCommand, GetRoleCommand } from "npm:@aws-sdk/client-iam@^3.700.0"
+import { STSClient, GetCallerIdentityCommand } from "npm:@aws-sdk/client-sts@^3.700.0"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
