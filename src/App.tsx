@@ -30,7 +30,7 @@ import { AGUIProvider } from "./contexts/agui/AGUIContext";
 
 function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <DeploymentProvider>
         <APIProvider>
           <ChatProvider>
@@ -59,7 +59,7 @@ function App() {
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>
-                <Footer />
+                {/* Footer is now rendered within individual pages */}
               </Router>
               <Toaster />
             </AGUIProvider>
