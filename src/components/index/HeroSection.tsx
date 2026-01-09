@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import Container from '@/components/Container';
 import { AnimatedText } from '@/components/ui/animated-shiny-text';
 import { MatrixRain } from '@/components/ui/matrix-rain';
+import { CRTOverlay } from '@/components/ui/crt-overlay';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Download, Code } from 'lucide-react';
 import InteractiveTerminal from './InteractiveTerminal';
@@ -59,11 +60,22 @@ const HeroSection: React.FC = () => {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden devonn-hero-bg">
       <MatrixRain 
-        speed={1} 
-        density={0.5} 
-        color="hsl(142 100% 62%)" 
+        speed={1.2} 
+        density={0.6} 
+        color="#3BFF7A" 
+        glowColor="#00FF41"
         size={16} 
-        opacity={0.4} 
+        opacity={0.5}
+        glowIntensity={2.5}
+      />
+      
+      <CRTOverlay 
+        scanlineOpacity={0.08}
+        scanlineSize={2}
+        flickerIntensity={0.02}
+        vignette={true}
+        rgbShift={true}
+        noise={true}
       />
       
       <div className="absolute inset-0 bg-background/50 z-0"></div>
