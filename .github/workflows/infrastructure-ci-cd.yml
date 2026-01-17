@@ -398,8 +398,7 @@ jobs:
     if: |
       success() && 
       github.ref == 'refs/heads/main' &&
-      github.event_name != 'pull_request' &&
-      (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main')
+      github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'production' }}
     concurrency: 
