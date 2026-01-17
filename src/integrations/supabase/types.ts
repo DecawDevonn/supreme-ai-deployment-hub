@@ -55,6 +55,125 @@ export type Database = {
           },
         ]
       }
+      agent_reviews: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          is_verified_purchase: boolean | null
+          rating: number
+          template_id: string
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_verified_purchase?: boolean | null
+          rating: number
+          template_id: string
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_verified_purchase?: boolean | null
+          rating?: number
+          template_id?: string
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_reviews_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "agent_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_templates: {
+        Row: {
+          author_id: string
+          avg_rating: number | null
+          capabilities: Json | null
+          category: string
+          config_schema: Json | null
+          created_at: string
+          default_config: Json | null
+          description: string | null
+          downloads: number | null
+          icon: string | null
+          id: string
+          is_featured: boolean | null
+          is_verified: boolean | null
+          mcp_tools: string[] | null
+          name: string
+          price: number | null
+          pricing_model: string
+          required_integrations: string[] | null
+          review_count: number | null
+          status: string
+          tags: string[] | null
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          author_id: string
+          avg_rating?: number | null
+          capabilities?: Json | null
+          category: string
+          config_schema?: Json | null
+          created_at?: string
+          default_config?: Json | null
+          description?: string | null
+          downloads?: number | null
+          icon?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_verified?: boolean | null
+          mcp_tools?: string[] | null
+          name: string
+          price?: number | null
+          pricing_model?: string
+          required_integrations?: string[] | null
+          review_count?: number | null
+          status?: string
+          tags?: string[] | null
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          author_id?: string
+          avg_rating?: number | null
+          capabilities?: Json | null
+          category?: string
+          config_schema?: Json | null
+          created_at?: string
+          default_config?: Json | null
+          description?: string | null
+          downloads?: number | null
+          icon?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_verified?: boolean | null
+          mcp_tools?: string[] | null
+          name?: string
+          price?: number | null
+          pricing_model?: string
+          required_integrations?: string[] | null
+          review_count?: number | null
+          status?: string
+          tags?: string[] | null
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
       api_connections: {
         Row: {
           auth_type: Database["public"]["Enums"]["auth_type"]
@@ -351,6 +470,71 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deployed_agents: {
+        Row: {
+          config: Json | null
+          cpu_usage: number | null
+          deployed_at: string
+          failed_runs: number | null
+          health_score: number | null
+          id: string
+          last_heartbeat: string | null
+          mcp_config: Json | null
+          memory_usage: number | null
+          name: string
+          status: string
+          successful_runs: number | null
+          template_id: string | null
+          total_runs: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          config?: Json | null
+          cpu_usage?: number | null
+          deployed_at?: string
+          failed_runs?: number | null
+          health_score?: number | null
+          id?: string
+          last_heartbeat?: string | null
+          mcp_config?: Json | null
+          memory_usage?: number | null
+          name: string
+          status?: string
+          successful_runs?: number | null
+          template_id?: string | null
+          total_runs?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          config?: Json | null
+          cpu_usage?: number | null
+          deployed_at?: string
+          failed_runs?: number | null
+          health_score?: number | null
+          id?: string
+          last_heartbeat?: string | null
+          mcp_config?: Json | null
+          memory_usage?: number | null
+          name?: string
+          status?: string
+          successful_runs?: number | null
+          template_id?: string | null
+          total_runs?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deployed_agents_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "agent_templates"
             referencedColumns: ["id"]
           },
         ]
