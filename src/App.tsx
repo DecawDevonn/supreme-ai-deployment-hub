@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import Navbar from "./components/Navbar";
@@ -21,6 +20,7 @@ import AgentDashboard from "./pages/AgentDashboard";
 import FlowEditor from "./pages/FlowEditor";
 import AgentDemo from "./pages/AgentDemo";
 import EnhancedAgentDemo from "./pages/EnhancedAgentDemo";
+import AgentMarketplace from "./pages/AgentMarketplace";
 import { Toaster } from "./components/ui/sonner";
 import { ChatProvider } from "./contexts/ChatContext";
 import { ThemeProvider } from 'next-themes';
@@ -52,6 +52,7 @@ function App() {
                     <Route path="/workflows" element={<WorkflowManagement />} />
                     <Route path="/agent-demo" element={<AgentDemo />} />
                     <Route path="/enhanced-agents" element={<EnhancedAgentDemo />} />
+                    <Route path="/marketplace" element={<AgentMarketplace />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/terms" element={<Terms />} />
