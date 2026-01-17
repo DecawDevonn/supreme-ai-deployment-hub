@@ -397,6 +397,8 @@ jobs:
     needs: [terraform-plan, approval]
     if: |
       success() && 
+      github.ref == 'refs/heads/main' &&
+      github.event_name != 'pull_request' &&
       (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'production' }}
@@ -526,6 +528,7 @@ jobs:
     name: Deploy to EKS
     needs: apply  
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
 
     steps:
       - name: Checkout Code
