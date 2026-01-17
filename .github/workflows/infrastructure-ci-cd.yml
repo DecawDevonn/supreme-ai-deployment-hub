@@ -13,9 +13,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'terraform/**'
       - 'policy/**'
-      - 'scripts/generate-tf-files.js'
       - 'tests/infrastructure/**'
   workflow_dispatch:
     inputs:

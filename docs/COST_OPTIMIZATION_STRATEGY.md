@@ -102,8 +102,9 @@ aws autoscaling put-scheduled-update-group-action \
   - **Archive data**: Compliance/backup, Glacier Deep Archive
 
 #### Lifecycle Rules
+
+### S3 Lifecycle Configuration (Example)
 ```bash
-# Example S3 lifecycle rule implementation
 aws s3api put-bucket-lifecycle-configuration \
   --bucket devonn-data-production \
   --lifecycle-configuration file://lifecycle-config.json
