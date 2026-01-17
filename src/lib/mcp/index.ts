@@ -1,4 +1,5 @@
 export { McpClient, createMcpClient } from "./client";
+export { AutonomousAgentExecutor, runAutonomousAgent } from "./autonomousAgent";
 export type {
   McpClientConfig,
   McpTool,
@@ -14,3 +15,11 @@ export type {
   CallToolResponse,
   InitializeResponse,
 } from "./types";
+export type {
+  AgentTask,
+  AgentStep,
+  AgentRunConfig,
+  AgentRun,
+  AgentCapability,
+} from "./agentTypes";
+export { DEFAULT_AGENT_CAPABILITIES } from "./agentTypes";
