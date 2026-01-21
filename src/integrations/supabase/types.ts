@@ -742,6 +742,54 @@ export type Database = {
         }
         Relationships: []
       }
+      mcp_connections: {
+        Row: {
+          api_token_encrypted: string | null
+          category: string
+          created_at: string
+          custom_config: Json | null
+          gateway_url: string | null
+          id: string
+          is_active: boolean | null
+          last_connected_at: string | null
+          server_id: string
+          server_name: string
+          server_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_token_encrypted?: string | null
+          category: string
+          created_at?: string
+          custom_config?: Json | null
+          gateway_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_connected_at?: string | null
+          server_id: string
+          server_name: string
+          server_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_token_encrypted?: string | null
+          category?: string
+          created_at?: string
+          custom_config?: Json | null
+          gateway_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_connected_at?: string | null
+          server_id?: string
+          server_name?: string
+          server_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       money_agents: {
         Row: {
           category: string

@@ -20,6 +20,7 @@ import {
   Brain,
   Zap,
   Database,
+  Cloud,
   Settings,
   Plus,
   Key,
@@ -41,6 +42,7 @@ interface McpServerSelectorProps {
 
 const categoryIcons: Record<string, React.ReactNode> = {
   hosting: <Server className="h-4 w-4" />,
+  cloud: <Cloud className="h-4 w-4" />,
   development: <Code className="h-4 w-4" />,
   ai: <Brain className="h-4 w-4" />,
   automation: <Zap className="h-4 w-4" />,

@@ -5,11 +5,15 @@ import { Link } from 'react-router-dom';
 import Container from '@/components/Container';
 import SectionHeading from '@/components/SectionHeading';
 import ManifestCode from '@/components/index/manifest/ManifestCode';
+import { ManifestSearch } from '@/components/index/manifest/ManifestSearch';
 import { yamlCode, deploymentFiles } from '@/data/manifest/index.cjs';
 import { Button } from '@/components/ui/button';
 import Footer from '@/components/Footer';
 
 const ManifestPage: React.FC = () => {
+  // Combine all manifest content for searching
+  const combinedCode = `${yamlCode}\n\n${deploymentFiles}`;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -79,6 +83,9 @@ const ManifestPage: React.FC = () => {
             </p>
           </motion.div>
         </div>
+
+        {/* Search Feature */}
+        <ManifestSearch code={combinedCode} />
 
         {/* Manifest Code Sections */}
         <div className="space-y-12">
