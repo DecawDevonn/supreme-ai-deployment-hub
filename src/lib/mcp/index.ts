@@ -23,3 +23,12 @@ export type {
   AgentCapability,
 } from "./agentTypes";
 export { DEFAULT_AGENT_CAPABILITIES } from "./agentTypes";
+
+// Server Registry
+export {
+  MCP_SERVER_REGISTRY,
+  SERVER_CATEGORIES,
+  getServerConfig,
+  getServersByCategory,
+} from "./serverRegistry";
+export type { McpServerConfig, McpServerConnection } from "./serverRegistry";
