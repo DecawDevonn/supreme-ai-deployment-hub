@@ -1213,7 +1213,117 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      api_connections_safe: {
+        Row: {
+          auth_type: Database["public"]["Enums"]["auth_type"] | null
+          created_at: string | null
+          id: string | null
+          is_valid: boolean | null
+          last_validated_at: string | null
+          service_name: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth_type?: Database["public"]["Enums"]["auth_type"] | null
+          created_at?: string | null
+          id?: string | null
+          is_valid?: boolean | null
+          last_validated_at?: string | null
+          service_name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth_type?: Database["public"]["Enums"]["auth_type"] | null
+          created_at?: string | null
+          id?: string | null
+          is_valid?: boolean | null
+          last_validated_at?: string | null
+          service_name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      cloud_credentials_safe: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          is_active: boolean | null
+          last_validated_at: string | null
+          provider: string | null
+          region: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_validated_at?: string | null
+          provider?: string | null
+          region?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_validated_at?: string | null
+          provider?: string | null
+          region?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      mcp_connections_safe: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          custom_config: Json | null
+          gateway_url: string | null
+          id: string | null
+          is_active: boolean | null
+          last_connected_at: string | null
+          server_id: string | null
+          server_name: string | null
+          server_type: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          custom_config?: Json | null
+          gateway_url?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_connected_at?: string | null
+          server_id?: string | null
+          server_name?: string | null
+          server_type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          custom_config?: Json | null
+          gateway_url?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_connected_at?: string | null
+          server_id?: string | null
+          server_name?: string | null
+          server_type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       claim_first_admin: { Args: { _user_id: string }; Returns: boolean }
@@ -1225,12 +1335,18 @@ export type Database = {
         Args: { credentials_json: Json; encryption_key: string }
         Returns: string
       }
+      get_cloud_credential_safe: {
+        Args: { credential_id: string }
+        Returns: Json
+      }
       get_connection_safe: { Args: { connection_id: string }; Returns: Json }
       has_valid_connection: {
         Args: { p_service_name: string }
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      list_cloud_credentials: { Args: never; Returns: Json }
+      list_mcp_connections_safe: { Args: never; Returns: Json }
       list_user_connections: { Args: never; Returns: Json }
       log_api_usage: {
         Args: { details_in: Json; event_type_in: string }
