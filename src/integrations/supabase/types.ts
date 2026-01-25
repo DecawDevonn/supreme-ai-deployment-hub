@@ -1225,7 +1225,13 @@ export type Database = {
         Args: { credentials_json: Json; encryption_key: string }
         Returns: string
       }
+      get_connection_safe: { Args: { connection_id: string }; Returns: Json }
+      has_valid_connection: {
+        Args: { p_service_name: string }
+        Returns: boolean
+      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      list_user_connections: { Args: never; Returns: Json }
       log_api_usage: {
         Args: { details_in: Json; event_type_in: string }
         Returns: undefined
