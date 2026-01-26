@@ -10,14 +10,16 @@ import APIReferenceTab from './APIReferenceTab';
 import ExamplesTab from './ExamplesTab';
 import DomainConfigTab from './DomainConfigTab';
 import DeploymentGuideTab from './DeploymentGuideTab';
+import VoiceBestPracticesTab from './VoiceBestPracticesTab';
 
 const DocumentationTabs: React.FC = () => {
   return (
     <Tabs defaultValue="overview" className="space-y-4">
-      <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+      <TabsList className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-9 gap-2">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="getting-started">Getting Started</TabsTrigger>
         <TabsTrigger value="guides">Guides</TabsTrigger>
+        <TabsTrigger value="voice">Voice Best Practices</TabsTrigger>
         <TabsTrigger value="structure">Project Structure</TabsTrigger>
         <TabsTrigger value="api-reference">API Reference</TabsTrigger>
         <TabsTrigger value="deployment">Deployment</TabsTrigger>
@@ -35,6 +37,10 @@ const DocumentationTabs: React.FC = () => {
 
       <TabsContent value="guides">
         <GuidesTab />
+      </TabsContent>
+
+      <TabsContent value="voice">
+        <VoiceBestPracticesTab />
       </TabsContent>
 
       <TabsContent value="structure">
