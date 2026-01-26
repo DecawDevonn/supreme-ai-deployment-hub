@@ -2,8 +2,9 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mic, Zap, Users, Settings, ExternalLink, MessageSquare, PhoneCall, Calendar, Mail } from 'lucide-react';
+import { Mic, Zap, Users, Settings, ExternalLink, MessageSquare, PhoneCall, Calendar } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import VoicePromptTemplates from './VoicePromptTemplates';
 
 const VoiceBestPracticesTab: React.FC = () => {
   return (
@@ -261,44 +262,23 @@ const VoiceBestPracticesTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Industry Templates */}
+      {/* Section 5: Industry Templates */}
       <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
-            <Mic className="h-5 w-5" />
-            Industry-Specific Master Prompts
-          </CardTitle>
-          <CardDescription>
-            Use these templates as starting points for your voice AI system
-          </CardDescription>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Mic className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-xl">5. Industry-Specific Voice Prompts</CardTitle>
+              <CardDescription>
+                Production-ready templates with escalation protocols and data collection
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card className="bg-background hover:bg-muted/50 transition-colors cursor-pointer">
-              <CardContent className="pt-4">
-                <Badge className="mb-2">Real Estate</Badge>
-                <p className="text-sm text-muted-foreground">
-                  Property inquiries, viewing scheduling, neighborhood info
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="bg-background hover:bg-muted/50 transition-colors cursor-pointer">
-              <CardContent className="pt-4">
-                <Badge className="mb-2">Healthcare / Clinic</Badge>
-                <p className="text-sm text-muted-foreground">
-                  Appointment booking, symptom triage, prescription refills
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="bg-background hover:bg-muted/50 transition-colors cursor-pointer">
-              <CardContent className="pt-4">
-                <Badge className="mb-2">SaaS / Tech</Badge>
-                <p className="text-sm text-muted-foreground">
-                  Demo scheduling, feature inquiries, support escalation
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          <VoicePromptTemplates />
         </CardContent>
       </Card>
 
