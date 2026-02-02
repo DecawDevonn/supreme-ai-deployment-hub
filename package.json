@@ -69,6 +69,7 @@
     "@types/jest": "^29.5.14",
     "@types/js-yaml": "^4.0.9",
     "@types/uuid": "^10.0.0",
+    "@vercel/analytics": "1.6.1",
     "@xyflow/react": "^12.6.0",
     "axios": "^1.8.4",
     "class-variance-authority": "^0.7.1",

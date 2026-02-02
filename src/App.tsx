@@ -29,6 +29,7 @@ import { ThemeProvider } from 'next-themes';
 import { DeploymentProvider } from "./contexts/DeploymentContext";
 import { APIProvider } from "./contexts/APIContext";
 import { AGUIProvider } from "./contexts/agui/AGUIContext";
+import { Analytics } from "@vercel/analytics/react";
 
 function App() {
   return (
@@ -67,6 +68,7 @@ function App() {
                 {/* Footer is now rendered within individual pages */}
               </Router>
               <Toaster />
+              <Analytics />
             </AGUIProvider>
           </ChatProvider>
         </APIProvider>
