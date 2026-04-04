@@ -9,9 +9,9 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "echo \"No tests specified\" && exit 0",
-    "test:extension": "echo \"No extension tests specified\" && exit 0",
-    "test:coverage": "echo \"No coverage available\" && exit 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "echo \"No E2E tests specified\" && exit 0"
   },
   "dependencies": {
