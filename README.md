@@ -1,5 +1,8 @@
 
-# Model Control Panel (MCP) API
+# Model Control Panel
+> **Part of the [Devonn Autonomous Ecosystem](docs/ECOSYSTEM.md)** — 9 repos, 2 live services, fully automated.
+
+ (MCP) API
 
 A unified FastAPI gateway for AI model services.
 
