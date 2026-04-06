@@ -16,6 +16,41 @@ A unified FastAPI gateway for AI model services.
   - Eleven Labs Text-to-Speech
   - Vector Database Search
 
+## One-Command Deployment (Devonn.ai Auto-Healer Mesh)
+
+This repo is the primary entry point for the full Devonn.ai autonomous mesh. A single script starts the Hermes orchestrator, the MCP API, and the React dashboard — auto-detecting their locations.
+
+**Step 1** — Create `.env`:
+
+```bash
+cp .env.example .env
+```
+
+**Step 2** — Edit `.env` and set at minimum:
+
+| Variable | Required | Default |
+|---|---|---|
+| `GITHUB_TOKEN` | Yes | — |
+| `OPENAI_API_KEY` | Yes | — |
+| `ORGANIZATION` | No | `wesship` |
+| `WORKSPACE_DIR` | No | `~/DevonnAI_AutoHealer` |
+| `CLONE_PROTOCOL` | No | `https` |
+
+**Step 3** — Run:
+
+```bash
+bash run_all.sh
+```
+
+The script auto-detects and starts:
+- **Hermes orchestrator** (`run_devonn_ai.py`) — polls the Central Orchestrator and dispatches AI agents
+- **MCP API** — from `src/main.py` or `command_center/app.py`, served on port 8000
+- **React dashboard** — from `command_center/frontend` or `frontend`
+
+Logs: `hermes.log`, `mcp_api.log`, `<frontend_path>/react_dashboard.log`
+
+---
+
 ## Getting Started
 
 ### Installation
