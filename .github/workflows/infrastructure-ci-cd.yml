@@ -138,7 +138,7 @@ jobs:
           output_format: sarif
 
       - name: Upload tfsec results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: success() || failure()
         with:
           token: ${{ secrets.GITHUB_TOKEN }}        
@@ -147,7 +147,7 @@ jobs:
 
           
       - name: Upload checkov results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: success() || failure()
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
