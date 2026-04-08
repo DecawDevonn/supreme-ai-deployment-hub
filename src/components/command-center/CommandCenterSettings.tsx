@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +16,6 @@ import {
 } from "lucide-react";
 import { useMcpConnections } from "@/hooks/useMcpConnections";
 import { useAPIKeys } from "@/hooks/useAPIKeys";
-import { toast } from "sonner";
 
 interface Props {
   onNavigate: (view: string) => void;
@@ -26,31 +24,12 @@ interface Props {
 export default function CommandCenterSettings({ onNavigate }: Props) {
   const { connections, isLoading: mcpLoading, setActiveConnection, deleteConnection } = useMcpConnections();
   const { availableAPIs, getAPIKey, getMaskedAPIKey, toggleKeyVisibility, isKeyVisible, copyAPIKeyToClipboard, rotateKeys } = useAPIKeys();
-  const [localVisible, setLocalVisible] = useState<Record<string, boolean>>({});
-
-  const toggleKeyVisibility = (key: string) => {
-    setVisibleKeys((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const maskKey = (value: string) => {
-    if (!value) return "••••••••";
-    return value.slice(0, 4) + "••••" + value.slice(-4);
-  };
-
-  const copyKey = (value: string) => {
-    navigator.clipboard.writeText(value);
-    toast.success("Copied to clipboard");
-  };
-
-  const configEntries = apiConfigs ? Object.entries(apiConfigs) : [];
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage MCP connections and API keys
-        </p>
+        <p className="text-muted-foreground mt-1">Manage MCP connections and API keys</p>
       </div>
 
       {/* MCP Connections */}
@@ -58,7 +37,6 @@ export default function CommandCenterSettings({ onNavigate }: Props) {
         <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
           <Server className="h-5 w-5" /> MCP Connections
         </h2>
-
         {mcpLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -69,11 +47,7 @@ export default function CommandCenterSettings({ onNavigate }: Props) {
               <Server className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
               <p className="text-sm text-muted-foreground">No MCP connections configured yet.</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Go to{" "}
-                <button className="underline text-primary" onClick={() => onNavigate("mcp")}>
-                  MCP Tools
-                </button>{" "}
-                to connect a server.
+                Go to <button className="underline text-primary" onClick={() => onNavigate("mcp")}>MCP Tools</button> to connect a server.
               </p>
             </CardContent>
           </Card>
@@ -91,16 +65,8 @@ export default function CommandCenterSettings({ onNavigate }: Props) {
                     </div>
                     <p className="text-xs text-muted-foreground truncate mt-0.5">{conn.category}</p>
                   </div>
-                  <Switch
-                    checked={conn.is_active}
-                    onCheckedChange={(checked) => setActiveConnection(conn.id, checked)}
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={() => deleteConnection(conn.id)}
-                  >
+                  <Switch checked={conn.is_active} onCheckedChange={(checked) => setActiveConnection(conn.id, checked)} />
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => deleteConnection(conn.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </CardContent>
@@ -122,40 +88,33 @@ export default function CommandCenterSettings({ onNavigate }: Props) {
             <RefreshCw className="h-3.5 w-3.5 mr-1" /> Rotate All
           </Button>
         </div>
-
-        {configEntries.length > 0 ? (
+        {availableAPIs.length > 0 ? (
           <div className="space-y-3">
-            {configEntries.map(([name, config]) => {
-              const value = getAPIKey(name);
-              return (
-                <Card key={name}>
-                  <CardContent className="py-4 flex items-center gap-4">
-                    <Shield className="h-5 w-5 text-muted-foreground shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm">{name}</h3>
-                      <code className="text-xs text-muted-foreground font-mono">
-                        {visibleKeys[name] ? value : maskKey(value || "")}
-                      </code>
-                    </div>
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => toggleKeyVisibility(name)}>
-                      {visibleKeys[name] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => copyKey(value || "")}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {availableAPIs.map((name) => (
+              <Card key={name}>
+                <CardContent className="py-4 flex items-center gap-4">
+                  <Shield className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-sm">{name}</h3>
+                    <code className="text-xs text-muted-foreground font-mono">
+                      {isKeyVisible(name) ? getAPIKey(name) : getMaskedAPIKey(name)}
+                    </code>
+                  </div>
+                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => toggleKeyVisibility(name)}>
+                    {isKeyVisible(name) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => copyAPIKeyToClipboard(name)}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         ) : (
           <Card>
             <CardContent className="py-8 text-center">
               <Key className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
               <p className="text-sm text-muted-foreground">No API keys configured.</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                API keys will appear here once you connect to services.
-              </p>
             </CardContent>
           </Card>
         )}
