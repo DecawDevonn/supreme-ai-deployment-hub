@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
   Server,
@@ -25,8 +24,8 @@ interface Props {
 }
 
 export default function CommandCenterSettings({ onNavigate }: Props) {
-  const { connections, isLoading: mcpLoading, toggleConnection, deleteConnection } = useMcpConnections();
-  const { apiKeys, loading: keysLoading, rotateKeys } = useAPIKeys();
+  const { connections, isLoading: mcpLoading, setActiveConnection, deleteConnection } = useMcpConnections();
+  const { apiConfigs, getAPIKey, rotateKeys } = useAPIKeys();
   const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({});
 
   const toggleKeyVisibility = (key: string) => {
@@ -42,6 +41,8 @@ export default function CommandCenterSettings({ onNavigate }: Props) {
     navigator.clipboard.writeText(value);
     toast.success("Copied to clipboard");
   };
+
+  const configEntries = apiConfigs ? Object.entries(apiConfigs) : [];
 
   return (
     <div className="space-y-8">
@@ -68,7 +69,11 @@ export default function CommandCenterSettings({ onNavigate }: Props) {
               <Server className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
               <p className="text-sm text-muted-foreground">No MCP connections configured yet.</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Go to <button className="underline text-primary" onClick={() => onNavigate("mcp")}>MCP Tools</button> to connect a server.
+                Go to{" "}
+                <button className="underline text-primary" onClick={() => onNavigate("mcp")}>
+                  MCP Tools
+                </button>{" "}
+                to connect a server.
               </p>
             </CardContent>
           </Card>
@@ -79,16 +84,16 @@ export default function CommandCenterSettings({ onNavigate }: Props) {
                 <CardContent className="py-4 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-sm">{conn.serverName}</h3>
-                      <Badge variant={conn.isActive ? "default" : "secondary"} className="text-[10px]">
-                        {conn.isActive ? "Active" : "Inactive"}
+                      <h3 className="font-medium text-sm">{conn.server_name}</h3>
+                      <Badge variant={conn.is_active ? "default" : "secondary"} className="text-[10px]">
+                        {conn.is_active ? "Active" : "Inactive"}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground truncate mt-0.5">{conn.category}</p>
                   </div>
                   <Switch
-                    checked={conn.isActive}
-                    onCheckedChange={() => toggleConnection(conn.id, !conn.isActive)}
+                    checked={conn.is_active}
+                    onCheckedChange={(checked) => setActiveConnection(conn.id, checked)}
                   />
                   <Button
                     size="icon"
@@ -118,31 +123,30 @@ export default function CommandCenterSettings({ onNavigate }: Props) {
           </Button>
         </div>
 
-        {keysLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : apiKeys && apiKeys.length > 0 ? (
+        {configEntries.length > 0 ? (
           <div className="space-y-3">
-            {apiKeys.map((key: any) => (
-              <Card key={key.name}>
-                <CardContent className="py-4 flex items-center gap-4">
-                  <Shield className="h-5 w-5 text-muted-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm">{key.name}</h3>
-                    <code className="text-xs text-muted-foreground font-mono">
-                      {visibleKeys[key.name] ? key.value : maskKey(key.value || "")}
-                    </code>
-                  </div>
-                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => toggleKeyVisibility(key.name)}>
-                    {visibleKeys[key.name] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => copyKey(key.value || "")}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+            {configEntries.map(([name, config]) => {
+              const value = getAPIKey(name);
+              return (
+                <Card key={name}>
+                  <CardContent className="py-4 flex items-center gap-4">
+                    <Shield className="h-5 w-5 text-muted-foreground shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm">{name}</h3>
+                      <code className="text-xs text-muted-foreground font-mono">
+                        {visibleKeys[name] ? value : maskKey(value || "")}
+                      </code>
+                    </div>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => toggleKeyVisibility(name)}>
+                      {visibleKeys[name] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => copyKey(value || "")}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <Card>

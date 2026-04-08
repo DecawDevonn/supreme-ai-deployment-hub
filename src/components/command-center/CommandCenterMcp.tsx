@@ -1,4 +1,4 @@
-import McpDashboard from "@/components/mcp/McpDashboard";
+import { McpDashboard } from "@/components/mcp/McpDashboard";
 
 interface Props {
   onNavigate: (view: string) => void;
