@@ -58,6 +58,7 @@ function App() {
                     <Route path="/enhanced-agents" element={<EnhancedAgentDemo />} />
                     <Route path="/marketplace" element={<AgentMarketplace />} />
                     <Route path="/mcp" element={<McpPage />} />
+                    <Route path="/status" element={<StatusDashboard />} />
                     <Route path="/manifest" element={<ManifestPage />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
