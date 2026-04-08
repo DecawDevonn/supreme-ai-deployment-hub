@@ -22,6 +22,7 @@ import AgentDemo from "./pages/AgentDemo";
 import EnhancedAgentDemo from "./pages/EnhancedAgentDemo";
 import AgentMarketplace from "./pages/AgentMarketplace";
 import McpPage from "./pages/McpPage";
+import StatusDashboard from "./pages/StatusDashboard";
 import ManifestPage from "./pages/ManifestPage";
 import { Toaster } from "./components/ui/sonner";
 import { ChatProvider } from "./contexts/ChatContext";
