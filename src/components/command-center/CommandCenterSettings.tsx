@@ -25,8 +25,8 @@ interface Props {
 
 export default function CommandCenterSettings({ onNavigate }: Props) {
   const { connections, isLoading: mcpLoading, setActiveConnection, deleteConnection } = useMcpConnections();
-  const { apiConfigs, getAPIKey, rotateKeys } = useAPIKeys();
-  const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({});
+  const { availableAPIs, getAPIKey, getMaskedAPIKey, toggleKeyVisibility, isKeyVisible, copyAPIKeyToClipboard, rotateKeys } = useAPIKeys();
+  const [localVisible, setLocalVisible] = useState<Record<string, boolean>>({});
 
   const toggleKeyVisibility = (key: string) => {
     setVisibleKeys((prev) => ({ ...prev, [key]: !prev[key] }));
