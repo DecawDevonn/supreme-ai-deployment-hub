@@ -1,0 +1,161 @@
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import {
+  Server,
+  Key,
+  Eye,
+  EyeOff,
+  Trash2,
+  RefreshCw,
+  Copy,
+  Loader2,
+  Shield,
+} from "lucide-react";
+import { useMcpConnections } from "@/hooks/useMcpConnections";
+import { useAPIKeys } from "@/hooks/useAPIKeys";
+import { toast } from "sonner";
+
+interface Props {
+  onNavigate: (view: string) => void;
+}
+
+export default function CommandCenterSettings({ onNavigate }: Props) {
+  const { connections, isLoading: mcpLoading, toggleConnection, deleteConnection } = useMcpConnections();
+  const { apiKeys, loading: keysLoading, rotateKeys } = useAPIKeys();
+  const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({});
+
+  const toggleKeyVisibility = (key: string) => {
+    setVisibleKeys((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const maskKey = (value: string) => {
+    if (!value) return "••••••••";
+    return value.slice(0, 4) + "••••" + value.slice(-4);
+  };
+
+  const copyKey = (value: string) => {
+    navigator.clipboard.writeText(value);
+    toast.success("Copied to clipboard");
+  };
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+        <p className="text-muted-foreground mt-1">
+          Manage MCP connections and API keys
+        </p>
+      </div>
+
+      {/* MCP Connections */}
+      <div>
+        <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+          <Server className="h-5 w-5" /> MCP Connections
+        </h2>
+
+        {mcpLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : connections.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center">
+              <Server className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+              <p className="text-sm text-muted-foreground">No MCP connections configured yet.</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Go to <button className="underline text-primary" onClick={() => onNavigate("mcp")}>MCP Tools</button> to connect a server.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {connections.map((conn) => (
+              <Card key={conn.id}>
+                <CardContent className="py-4 flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-sm">{conn.serverName}</h3>
+                      <Badge variant={conn.isActive ? "default" : "secondary"} className="text-[10px]">
+                        {conn.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">{conn.category}</p>
+                  </div>
+                  <Switch
+                    checked={conn.isActive}
+                    onCheckedChange={() => toggleConnection(conn.id, !conn.isActive)}
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    onClick={() => deleteConnection(conn.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <Separator />
+
+      {/* API Keys */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Key className="h-5 w-5" /> API Keys
+          </h2>
+          <Button variant="outline" size="sm" onClick={() => rotateKeys()}>
+            <RefreshCw className="h-3.5 w-3.5 mr-1" /> Rotate All
+          </Button>
+        </div>
+
+        {keysLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : apiKeys && apiKeys.length > 0 ? (
+          <div className="space-y-3">
+            {apiKeys.map((key: any) => (
+              <Card key={key.name}>
+                <CardContent className="py-4 flex items-center gap-4">
+                  <Shield className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-sm">{key.name}</h3>
+                    <code className="text-xs text-muted-foreground font-mono">
+                      {visibleKeys[key.name] ? key.value : maskKey(key.value || "")}
+                    </code>
+                  </div>
+                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => toggleKeyVisibility(key.name)}>
+                    {visibleKeys[key.name] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => copyKey(key.value || "")}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="py-8 text-center">
+              <Key className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+              <p className="text-sm text-muted-foreground">No API keys configured.</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                API keys will appear here once you connect to services.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
