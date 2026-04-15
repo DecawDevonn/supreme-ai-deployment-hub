@@ -29,10 +29,22 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN_WRITE }}
           fetch-depth: 0
+
+      - name: Debug repo structure
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "---- Root contents ----"
+          ls -la
+          echo "---- scripts directory ----"
+          ls -la scripts/ || echo "No scripts directory"
+          echo "---- scripts/ai directory ----"
+          ls -la scripts/ai/ || echo "No scripts/ai directory"
+          echo "---- find propose_fixes.py ----"
+          find . -name "propose_fixes.py" 2>/dev/null || echo "File not found anywhere"
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -42,8 +54,28 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          python -m pip install --upgrade pip
           pip install openai flake8
+          if [ -f scripts/ai/requirements.txt ]; then
+            pip install -r scripts/ai/requirements.txt
+          fi
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Verify script exists
+        id: verify_script
+        run: |
+          SCRIPT_PATH="scripts/ai/propose_fixes.py"
+          if [ ! -f "$SCRIPT_PATH" ]; then
+            echo "::error::Script not found at $SCRIPT_PATH"
+            echo "Searching for file..."
+            find . -name "propose_fixes.py" 2>/dev/null || true
+            exit 1
+          fi
+          echo "Script found at: $SCRIPT_PATH"
+          echo "path=$SCRIPT_PATH" >> $GITHUB_OUTPUT
+          chmod +x "$SCRIPT_PATH"
 
       - name: Configure git identity
         run: |
