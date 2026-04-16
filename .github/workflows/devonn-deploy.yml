@@ -1,0 +1,20 @@
+name: Devonn Deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+      - name: Build image
+        run: docker build -t devonn-coordinator ./scaffold/devonn-coordinator
+      - name: Push to ECR
+        run: echo "TODO: add ECR push"
+      - name: Trigger Supreme Hub
+        run: |
+          curl -X POST http://deploy.devonn.ai/api/v1/deploy \
+          -H "Content-Type: application/json" \
+          -d '{"service_name":"devonn-coordinator"}'
