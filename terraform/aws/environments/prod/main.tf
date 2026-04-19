@@ -1,5 +1,21 @@
 terraform {
   required_version = ">= 1.5.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.45"
+    }
+  }
+
+  # Uncomment after running: terraform init -backend-config=...
+  # backend "s3" {
+  #   bucket         = "devonn-terraform-state"
+  #   key            = "prod/terraform.tfstate"
+  #   region         = "us-west-2"
+  #   dynamodb_table = "devonn-terraform-locks"
+  #   encrypt        = true
+  # }
 }
 
 provider "aws" {
@@ -44,6 +60,10 @@ output "cluster_endpoint" {
   value = module.eks.cluster_endpoint
 }
 
-output "ecr_repositories" {
+output "ecr_repository_url" {
   value = module.ecr.repository_urls
+}
+
+output "vpc_id" {
+  value = module.network.vpc_id
 }

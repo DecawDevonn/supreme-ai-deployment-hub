@@ -1,3 +1,29 @@
-resource "aws_ecr_repository" "backend" { name = "${var.name_prefix}-backend" }
-resource "aws_ecr_repository" "frontend" { name = "${var.name_prefix}-frontend" }
-output "repository_urls" { value = { backend = aws_ecr_repository.backend.repository_url frontend = aws_ecr_repository.frontend.repository_url } }
+################################################################################
+# ECR Repository
+# Live: 211125423223.dkr.ecr.us-west-2.amazonaws.com/production/devonn-ai
+################################################################################
+
+resource "aws_ecr_repository" "devonn_ai" {
+  name                 = "production/devonn-ai"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = var.tags
+}
+
+################################################################################
+# Outputs
+################################################################################
+
+output "repository_urls" {
+  value = {
+    devonn_ai = aws_ecr_repository.devonn_ai.repository_url
+  }
+}
+
+output "repository_arn" {
+  value = aws_ecr_repository.devonn_ai.arn
+}
