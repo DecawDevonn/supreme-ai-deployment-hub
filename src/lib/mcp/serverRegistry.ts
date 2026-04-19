@@ -238,10 +238,12 @@ export const MCP_SERVER_REGISTRY: McpServerConfig[] = [
   {
     id: "devonn-gateway",
     name: "DEVONN.AI Gateway",
-    description: "Connect to DEVONN.AI's central MCP gateway for unified tool access",
+    description: "Connect to DEVONN.AI's central MCP gateway for unified tool access (proxied via Supabase edge function)",
     category: "ai",
     type: "http",
-    gatewayUrl: "https://api.devonn.ai/mcp",
+    // Routes through the Supabase edge function which proxies to the EKS backend
+    // Once api.devonn.ai DNS is live, the edge function will use https://api.devonn.ai/mcp
+    gatewayUrl: "https://bqkpxdjmpbucenbppxzc.supabase.co/functions/v1/mcp-gateway",
     auth: {
       type: "api_token",
       envVar: "DEVONN_API_KEY",

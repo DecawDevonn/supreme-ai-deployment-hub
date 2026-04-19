@@ -18,13 +18,18 @@ export interface ServiceStatus {
   error?: string;
 }
 
+// Production backend URLs — EKS cluster on AWS (us-west-2)
+const BACKEND_URL = import.meta.env.VITE_API_URL || "https://api.devonn.ai";
+const MCP_GATEWAY_URL =
+  import.meta.env.VITE_MCP_GATEWAY_URL ||
+  "https://bqkpxdjmpbucenbppxzc.supabase.co/functions/v1/mcp-gateway";
+
 const DEFAULT_ENDPOINTS: ServiceEndpoint[] = [
-  { id: "fastapi", name: "FastAPI", url: "http://localhost:8000/health", description: "Main API orchestration service", icon: "⚡" },
-  { id: "n8n", name: "n8n Workflows", url: "http://localhost:5678/healthz", description: "Workflow automation engine", icon: "🔄" },
-  { id: "mcp-gateway", name: "MCP Gateway", url: "http://localhost:3001/health", description: "Model Context Protocol server", icon: "🔌" },
-  { id: "openclawd", name: "OpenClawd", url: "http://localhost:8080/health", description: "AI model inference service", icon: "🧠" },
-  { id: "postgres", name: "PostgreSQL", url: "http://localhost:5432", description: "Primary database", icon: "🗄️" },
-  { id: "redis", name: "Redis", url: "http://localhost:6379", description: "Cache & message broker", icon: "📦" },
+  { id: "backend", name: "Devonn Backend", url: `${BACKEND_URL}/api/health`, description: "Flask API on EKS (Flask + MongoDB + Redis)", icon: "⚡" },
+  { id: "mcp-gateway", name: "MCP Gateway", url: MCP_GATEWAY_URL, description: "Supabase edge function → EKS MCP proxy", icon: "🔌" },
+  { id: "openclawd", name: "OpenClawd", url: `${BACKEND_URL}/api/health`, description: "AI model inference service", icon: "🧠" },
+  { id: "redis", name: "Redis (ElastiCache)", url: `${BACKEND_URL}/api/health`, description: "AWS ElastiCache Redis cache", icon: "📦" },
+  { id: "mongodb", name: "DocumentDB", url: `${BACKEND_URL}/api/health`, description: "AWS DocumentDB (MongoDB-compatible)", icon: "🗄️" },
 ];
 
 const STORAGE_KEY = "devonn-service-endpoints";

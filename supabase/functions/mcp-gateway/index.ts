@@ -12,6 +12,12 @@ interface McpProxyRequest {
   gatewayUrl?: string;
 }
 
+// Default backend URL: prefer custom domain, fall back to ALB hostname
+// MCP_GATEWAY_URL can be set via Supabase Edge Function secrets:
+//   supabase secrets set MCP_GATEWAY_URL=https://api.devonn.ai/mcp --project-ref bqkpxdjmpbucenbppxzc
+const DEFAULT_GATEWAY_URL =
+  "http://devonn-alb-managed-2012536228.us-west-2.elb.amazonaws.com/api/mcp";
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -20,12 +26,13 @@ serve(async (req) => {
 
   try {
     const body: McpProxyRequest = await req.json();
-    
-    // Get gateway URL from header or body
-    const gatewayUrl = req.headers.get("x-mcp-gateway-url") 
-      ?? body.gatewayUrl 
-      ?? Deno.env.get("MCP_GATEWAY_URL")
-      ?? "http://gateway-remote:8080/mcp";
+
+    // Priority: request header > request body > env var > ALB default
+    const gatewayUrl =
+      req.headers.get("x-mcp-gateway-url") ??
+      body.gatewayUrl ??
+      Deno.env.get("MCP_GATEWAY_URL") ??
+      DEFAULT_GATEWAY_URL;
 
     console.log(`[mcp-gateway] Proxying ${body.method} to ${gatewayUrl}`);
 
@@ -37,7 +44,7 @@ serve(async (req) => {
       params: body.params ?? {},
     };
 
-    // Forward to MCP Gateway
+    // Forward to MCP Gateway backend
     const response = await fetch(gatewayUrl, {
       method: "POST",
       headers: {
